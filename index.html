@@ -1,0 +1,2838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heritage - Private Banking & International Transfers</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#071e3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="icon" type="image/png" href="favicon.png">
+
+<!-- HTML5 QR Code Scanner Library -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
+
+    <!-- Firebase App, Auth & Firestore Compat SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+        <!-- Smartsupp Live Chat script -->
+    <script type="text/javascript">
+        var _smartsupp = _smartsupp || {};
+        _smartsupp.key = '3e3a2cb2cc19e5878880c26cf620635e8ae8f2fd';
+        _smartsupp.autostart = false; // Prevents auto-launching unwanted floating bubbles
+        window.smartsupp||(function(d) {
+          var s,c,o=smartsupp=function(){ o._.push(arguments)};o._=[];
+          s=d.getElementsByTagName('script')[0];c=d.createElement('script');
+          c.type='text/javascript';c.charset='utf-8';c.async=true;
+          c.src='https://www.smartsuppchat.com/loader.js?';s.parentNode.insertBefore(c,s);
+        })(document);
+    </script>
+
+
+    <style>
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(180deg, #051937 0%, #030d1a 100%); min-height: 100vh; }
+    .bg-bank-gradient { background: linear-gradient(180deg, #071e3d 0%, #030d1a 100%); }
+    
+    /* Force-hide Smartsupp's default floating chat bubble launcher anywhere on the page */
+    #smartsupp-widget,
+    iframe[src*="smartsuppchat.com/chat"],
+    div[id^="smartsupp-"],
+    div.smartsupp-button {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+    }
+    /* Spotlight Target Highlight */
+    .tour-spotlight-active {
+        position: relative !important;
+        z-index: 60 !important;
+        box-shadow: 0 0 0 4px #ffffff, 0 0 0 9999px rgba(2, 6, 23, 0.80) !important;
+        outline: 2px dashed #ffffff;
+        outline-offset: 6px;
+        border-radius: 16px;
+        transition: all 0.3s ease;
+    }
+
+    /* Tooltip Speech Bubble Arrow */
+    .tour-arrow-up {
+        position: absolute;
+        top: -7px;
+        width: 14px;
+        height: 14px;
+        background: #ffffff;
+        transform: rotate(45deg);
+    }
+
+    .tour-arrow-down {
+        position: absolute;
+        bottom: -7px;
+        width: 14px;
+        height: 14px;
+        background: #ffffff;
+        transform: rotate(45deg);
+    }
+</style>
+
+
+
+</head>
+<body class="bg-bank-gradient min-h-screen text-gray-900 flex justify-center">
+
+    <div class="w-full max-w-md bg-bank-gradient min-h-screen flex flex-col justify-between shadow-2xl relative overflow-x-hidden">
+
+        <!-- TOP APP BAR (PWA Install Prompt Banner) -->
+        <div id="install-banner" class="bg-[#0b2545] text-white px-4 py-2.5 flex items-center justify-between text-xs border-b border-white/10">
+            <span class="truncate pr-2 cursor-pointer" onclick="alert('To install, tap your browser menu or share icon and select Add to Home Screen.')">Install Heritage Bank on your device</span>
+            <div class="flex items-center space-x-2 shrink-0">
+                <button onclick="alert('To install, tap your browser menu or share icon and select Add to Home Screen.')" class="bg-white text-gray-900 font-semibold px-3 py-1 rounded-full text-xs shadow">
+                    <i class="fa-solid fa-download mr-1"></i> Install
+                </button>
+                <button onclick="document.getElementById('install-banner').style.display='none'" class="text-white/70 hover:text-white px-1.5 font-bold text-sm">✕</button>
+            </div>
+        </div>
+
+        <!-- MAIN DYNAMIC CONTAINER -->
+        <div id="main-container" class="flex-1 flex flex-col px-4 py-6 mb-4">
+            <!-- Dynamic content injected here -->
+        </div>
+
+    </div>
+
+    <!-- SECRET ADMIN MODAL -->
+    <div id="admin-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-md p-6 flex flex-col max-h-[90vh] shadow-2xl text-gray-900">
+            <div class="flex justify-between items-center mb-4 pb-2 border-b">
+                <h2 class="font-bold text-lg text-blue-900"><i class="fa-solid fa-shield-halved mr-2"></i>Heritage Admin Panel</h2>
+                <button onclick="closeAdminPanel()" class="text-gray-400 hover:text-gray-600 font-bold text-base px-2">✕</button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="mb-4">
+                <input type="text" id="admin-search" oninput="filterUsers()" placeholder="Search users by name or email..." class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-blue-600">
+            </div>
+
+            <!-- Users List Container -->
+            <div id="admin-user-list" class="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
+                <!-- Dynamically populated user rows -->
+            </div>
+        </div>
+    </div>
+
+    <!-- APPLICATION SCRIPT -->
+    <script>
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBx1MiTLA159Tbhpz55CHaKRZxaDps2nI8",
+            authDomain: "heritage-7360a.firebaseapp.com",
+            projectId: "heritage-7360a",
+            storageBucket: "heritage-7360a.firebasestorage.app",
+            messagingSenderId: "779608412647",
+            appId: "1:779608412647:web:ab0bdac84df7fe66b5ad42",
+            measurementId: "G-6V3ZWFPCB6"
+        };
+
+        // Initialize Firebase Compat & Firestore
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // --- APPLICATION STATE ---
+        let forceShowLoginForm = false;
+        let currentView = 'auth'; 
+        let authTab = 'signin';   
+        let selectedAccountType = 'Everyday Checking';
+        let userName = 'user';
+        let isLoading = false;
+        let loadingMessage = 'Loading...';
+        let isBalanceHidden = false; 
+        let lastUserSession = JSON.parse(localStorage.getItem('Heritage_last_user')) || null;
+        let savingsBalance = 0;
+        let isChatOpen = false;
+
+
+        let transferData = {
+            recipientAccount: '',
+            recipientName: '',
+            recipientUid: '',
+            recipientSymbol: '',
+            amount: 0,
+            pin: ''
+        };
+
+        let withdrawData = {
+            method: '',
+            bankName: '',
+            accountNumber: '',
+            accountName: '',
+            paypalEmail: '',
+            cashTag: '',
+            amount: 0,
+            note: '',
+            fee: 0,
+            refNumber: '',
+            dateStr: '',
+            status: 'Pending',
+            notificationRead: false
+        };
+
+        let lastTransaction = null;
+        let userTransactions = [];
+
+        const accountTypes = [
+            { name: 'Everyday Checking', tag: 'Checking', desc: 'No monthly fee, instant transfers, early direct deposit.', badge: '$300 welcome bonus' },
+            { name: 'Premier Savings', tag: 'Savings', desc: '4.35% APY, no minimum balance, automatic round-ups.', badge: '4.35% APY' },
+            { name: 'Heritage Sapphire Card', tag: 'Card', desc: '5x points on travel, 0% intro APR for 15 months.', badge: '60,000 bonus points' },
+            { name: 'Business Complete', tag: 'Business', desc: 'Invoicing, multi-user access and merchant deposits.', badge: 'Free first year' }
+        ];
+
+                const countryBanks = {
+            "United States": ["Chase Bank", "Bank of America", "Wells Fargo", "Citibank", "U.S. Bank", "PNC Bank"],
+            "Canada": ["Royal Bank of Canada (RBC)", "Toronto-Dominion Bank (TD)", "Scotiabank", "Bank of Montreal (BMO)", "CIBC", "National Bank of Canada"],
+            "United Kingdom": ["Barclays", "HSBC UK", "Lloyds Bank", "NatWest", "Santander UK", "Monzo"],
+            "Germany": ["Deutsche Bank", "Commerzbank", "BNP Paribas", "Crédit Agricole", "Société Générale", "ING Group"],
+            "France": ["Deutsche Bank", "Commerzbank", "BNP Paribas", "Crédit Agricole", "Société Générale", "ING Group"],
+            "Nigeria": ["Access Bank", "Guaranty Trust Bank (GTB)", "First Bank of Nigeria", "United Bank for Africa (UBA)", "Zenith Bank", "Opay", "Moniepoint"],
+            "Albania": ["Banka Kombëtare Tregtare (BKT)", "Raiffeisen Bank Albania", "Credins Bank", "Intesa Sanpaolo Bank Albania", "OTP Bank Albania"],
+            "Andorra": ["Andbank", "MoraBanc", "Creand (Crèdit Andorrà)"],
+            "Austria": ["Erste Group Bank", "Raiffeisen Bank International", "UniCredit Bank Austria", "BAWAG Group", "Oberbank"],
+            "Belarus": ["Belarusbank", "Belagroprombank", "Priorbank", "Belinvestbank", "Alfa-Bank Belarus"],
+            "Belgium": ["BNP Paribas Fortis", "KBC Bank", "ING Belgium", "Belfius Bank", "Argenta Bank"],
+            "Bosnia and Herzegovina": ["UniCredit Bank Mostar", "Raiffeisen Bank dd BiH", "NLB Banka", "Intesa Sanpaolo Banka BiH", "Nova Banka"],
+            "Croatia": ["Zagrebačka banka (UniCredit)", "Privredna banka Zagreb (PBZ)", "Erste & Steiermärkische Bank", "OTP banka Hrvatska", "Raiffeisenbank Austria"],
+            "Cyprus": ["Bank of Cyprus", "Hellenic Bank", "Eurobank Cyprus", "Alpha Bank Cyprus", "AstroBank"],
+            "Czech Republic": ["Česká spořitelna", "ČSOB", "Komerční banka", "UniCredit Bank Czech Republic", "Raiffeisenbank Czech Republic"],
+            "Australia": ["Commonwealth Bank (CommBank)", "Westpac", "ANZ Bank", "National Australia Bank (NAB)", "Macquarie Bank", "ING Australia"],
+            "Norway": ["DNB Bank", "Nordea Bank", "SpareBank 1 SR-Bank", "SpareBank 1 Østlandet", "Sbanken", "Handelsbanken Norway"],
+            "Denmark": ["Danske Bank", "Nykredit", "Jyske Bank", "Nordea Danmark", "Sydbank"],
+            "Estonia": ["Swedbank Estonia", "SEB Pank", "LHV Pank", "Luminor Bank", "Coop Pank"],
+            "Finland": ["OP Financial Group", "Nordea Finland", "Danske Bank Finland", "Aktia Bank", "S-Bank"],
+            "Greece": ["National Bank of Greece", "Piraeus Bank", "Alpha Bank", "Eurobank", "Optima Bank"],
+            "Hungary": ["OTP Bank", "MBH Bank", "K&H Bank", "UniCredit Bank Hungary", "Erste Bank Hungary"],
+            "Iceland": ["Landsbankinn", "Íslandsbanki", "Arion Bank", "Kvika banki"],
+            "Ireland": ["Bank of Ireland", "Allied Irish Banks (AIB)", "Permanent TSB (PTSB)", "Revolut Ireland"],
+            "Italy": ["Intesa Sanpaolo", "UniCredit", "Banco BPM", "BPER Banca", "Banca Monte dei Paschi di Siena", "BNL"],
+            "Latvia": ["Swedbank Latvia", "SEB banka", "Citadele banka", "Luminor Latvia", "Rietumu Banka"],
+            "Liechtenstein": ["LGT Bank", "Liechtensteinische Landesbank (LLB)", "VP Bank"],
+            "Lithuania": ["Swedbank Lithuania", "SEB bankas", "Luminor Lithuania", "Šiaulių bankas", "Revolut Bank"],
+            "Luxembourg": ["Spuerkeess (BCEE)", "BGL BNP Paribas", "Banque Internationale à Luxembourg (BIL)", "ING Luxembourg"],
+            "Malta": ["Bank of Valletta", "HSBC Bank Malta", "APS Bank", "Lombard Bank Malta", "BNF Bank"],
+            "Moldova": ["maib (Moldova Agroindbank)", "Moldindconbank", "Victoriabank", "OTP Bank Moldova"],
+            "Monaco": ["CFM Indosuez Wealth", "CMB Monaco", "Société Générale Private Banking Monaco", "Barclays Monaco"],
+            "Montenegro": ["Crnogorska komercijalna banka (CKB)", "NLB Banka Podgorica", "Hipotekarna banka", "Erste Bank Montenegro"],
+            "Netherlands": ["ING Bank", "Rabobank", "ABN AMRO", "de Volksbank", "Triodos Bank"],
+            "North Macedonia": ["Komercijalna Banka Skopje", "Stopanska Banka", "NLB Banka Skopje", "Halkbank Skopje"],
+            "Poland": ["PKO Bank Polski", "Bank Pekao", "Santander Bank Polska", "ING Bank Śląski", "mBank"],
+            "Portugal": ["Caixa Geral de Depósitos", "Millennium bcp", "Novo Banco", "Banco Santander Totta", "Banco BPI"],
+            "Romania": ["Banca Transilvania", "Banca Comercială Română (BCR)", "BRD – Groupe Société Générale", "ING Bank Romania", "Raiffeisen Bank Romania"],
+            "San Marino": ["Banca di San Marino", "Cassa di Risparmio della Repubblica di San Marino", "Banca Sammarinese di Investimento"],
+            "Serbia": ["Banca Intesa Beograd", "OTP banka Srbija", "UniCredit Bank Srbija", "NLB Komercijalna banka", "Raiffeisen banka Beograd"],
+            "Slovakia": ["Slovenská sporiteľňa", "VÚB banka", "Tatra banka", "ČSOB Slovakia", "UniCredit Bank Slovakia"],
+            "Slovenia": ["NLB (Nova Ljubljanska banka)", "OTP banka Slovenia", "UniCredit Banka Slovenija", "Addiko Bank"],
+            "Spain": ["Banco Santander", "BBVA", "CaixaBank", "Banco Sabadell", "Bankinter"],
+            "Sweden": ["Swedbank", "SEB (Skandinaviska Enskilda Banken)", "Handelsbanken", "Nordea Sweden"],
+            "Switzerland": ["UBS", "PostFinance", "Raiffeisen Switzerland", "Zürcher Kantonalbank (ZKB)", "Julius Baer"],
+            "Ukraine": ["PrivatBank", "Oschadbank", "Raiffeisen Bank Ukraine", "UKRSIBBANK", "Monobank"],
+            "Vatican City": ["Institute for the Works of Religion (IOR)"],
+            "Antigua and Barbuda": ["Eastern Caribbean Amalgamated Bank (ECAB)", "CIBC FirstCaribbean", "ACB Caribbean"],
+            "Bahamas": ["RBC Royal Bank Bahamas", "CIBC FirstCaribbean Bahamas", "Scotiabank Bahamas", "Bank of The Bahamas"],
+            "Barbados": ["CIBC FirstCaribbean", "Republic Bank Barbados", "Scotiabank Barbados", "RBC Royal Bank Barbados"],
+            "Belize": ["Belize Bank", "Atlantic Bank", "Heritage Bank Belize", "National Bank of Belize"],
+            "Bolivia": ["Banco Nacional de Bolivia (BNB)", "Banco Mercantil Santa Cruz", "Banco Bisa", "Banco Unión", "Banco de Crédito de Bolivia"],
+            "Brazil": ["Itaú Unibanco", "Banco do Brasil", "Banco Bradesco", "Caixa Econômica Federal", "Santander Brasil", "Nubank"],
+            "Chile": ["Banco de Chile", "BancoEstado", "Banco Santander Chile", "Banco de Crédito e Inversiones (Bci)", "Scotiabank Chile"],
+            "Colombia": ["Bancolombia", "Banco de Bogotá", "Davivienda", "BBVA Colombia", "Banco de Occidente"],
+            "Costa Rica": ["Banco Nacional de Costa Rica", "Banco de Costa Rica (BCR)", "BAC Credomatic", "Banco Popular", "Scotiabank Costa Rica"],
+            "Cuba": ["Banco Nacional de Cuba", "Banco Popular de Ahorro (BPA)", "Banco de Crédito y Comercio (BANDEC)", "Banco Metropolitano"],
+            "Dominica": ["National Bank of Dominica", "CIBC FirstCaribbean Dominica", "Republic Bank Dominica"],
+            "Dominican Republic": ["Banco Popular Dominicano", "Banreservas", "Banco BHD", "Asociación Popular de Ahorros y Préstamos (APAP)"],
+            "Ecuador": ["Banco Pichincha", "Banco Guayaquil", "Produbanco", "Banco del Pacífico", "Banco Bolivariano"],
+            "El Salvador": ["Banco Agrícola", "Banco Cuscatlán", "BAC Credomatic El Salvador", "Banco Davivienda Salvadoreño"],
+            "Grenada": ["Grenada Co-operative Bank", "Republic Bank Grenada", "CIBC FirstCaribbean Grenada"],
+            "Guatemala": ["Banco Industrial", "Banrural", "Banco G&T Continental", "BAC Credomatic Guatemala", "BAM"],
+            "Guyana": ["Republic Bank Guyana", "Guyana Bank for Trade and Industry (GBTI)", "Demerara Bank", "Citizens Bank Guyana"],
+            "Haiti": ["Sogebank", "Unibank", "Banque Nationale de Crédit (BNC)", "Capital Bank"],
+            "Honduras": ["Banco Atlántida", "Banco Ficohsa", "Banco de Occidente Honduras", "BAC Credomatic Honduras", "Banpaís"],
+            "Jamaica": ["National Commercial Bank Jamaica (NCB)", "Scotiabank Jamaica", "JN Bank", "Sagicor Bank Jamaica", "First Global Bank"],
+            "Mexico": ["BBVA México", "Banorte", "Citibanamex", "Santander México", "HSBC México", "Scotiabank México"],
+            "Nicaragua": ["Banpro (Banco de la Producción)", "BAC Credomatic Nicaragua", "Banco Lafise Bancentro", "Banco Ficohsa Nicaragua"],
+            "Panama": ["Banco General", "Banistmo", "Banco Nacional de Panamá", "BAC Credomatic Panamá", "Global Bank"],
+            "Paraguay": ["Banco Itaú Paraguay", "Banco Continental", "Banco Nacional de Fomento (BNF)", "Sudameris Bank", "Banco Familiar"],
+            "Peru": ["Banco de Crédito del Perú (BCP)", "BBVA Perú", "Interbank", "Scotiabank Perú", "Banco de la Nación"],
+            "Saint Kitts and Nevis": ["St. Kitts-Nevis-Anguilla National Bank", "Republic Bank St. Kitts", "CIBC FirstCaribbean"],
+            "Saint Lucia": ["Bank of Saint Lucia", "1st National Bank St. Lucia", "CIBC FirstCaribbean St. Lucia", "Republic Bank St. Lucia"],
+            "Saint Vincent and the Grenadines": ["Bank of St. Vincent and the Grenadines", "CIBC FirstCaribbean", "Republic Bank"],
+            "Suriname": ["De Surinaamsche Bank (DSB)", "Hakrinbank", "Finabank", "Republic Bank Suriname"],
+            "Trinidad and Tobago": ["Republic Bank", "First Citizens Bank", "Scotiabank Trinidad and Tobago", "RBC Royal Bank"],
+            "Uruguay": ["Banco República (BROU)", "Banco Itaú Uruguay", "Banco Santander Uruguay", "BBVA Uruguay", "Scotiabank Uruguay"],
+            "Venezuela": ["Banco de Venezuela", "Banesco", "Banco Mercantil", "BBVA Provincial", "Banco Nacional de Crédito (BNC)"]
+        };
+
+        const defaultBanks = ["Heritage Global Treasury Bank", "International Trust Bank", "Standard Chartered", "Citibank Global"];
+
+        const countriesWithCurrencies = [
+            { name: "United States", code: "US", currency: "USD", symbol: "$", phoneCode: "+1" },
+            { name: "Canada", code: "CA", currency: "CAD", symbol: "CA$", phoneCode: "+1" },
+            { name: "United Kingdom", code: "GB", currency: "GBP", symbol: "£", phoneCode: "+44" },
+            { name: "Germany", code: "DE", currency: "EUR", symbol: "€", phoneCode: "+49" },
+            { name: "France", code: "FR", currency: "EUR", symbol: "€", phoneCode: "+33" },
+            { name: "Nigeria", code: "NG", currency: "NGN", symbol: "₦", phoneCode: "+234" },
+            { name: "Albania", code: "AL", currency: "ALL", symbol: "L", phoneCode: "+355" },
+            { name: "Andorra", code: "AD", currency: "EUR", symbol: "€", phoneCode: "+376" },
+            { name: "Austria", code: "AT", currency: "EUR", symbol: "€", phoneCode: "+43" },
+            { name: "Belarus", code: "BY", currency: "BYN", symbol: "Br", phoneCode: "+375" },
+            { name: "Belgium", code: "BE", currency: "EUR", symbol: "€", phoneCode: "+32" },
+            { name: "Bosnia and Herzegovina", code: "BA", currency: "BAM", symbol: "KM", phoneCode: "+387" },
+            { name: "Croatia", code: "HR", currency: "EUR", symbol: "€", phoneCode: "+385" },
+            { name: "Cyprus", code: "CY", currency: "EUR", symbol: "€", phoneCode: "+357" },
+            { name: "Czech Republic", code: "CZ", currency: "CZK", symbol: "Kč", phoneCode: "+420" },
+            { name: "Australia", code: "AU", currency: "AUD", symbol: "A$", phoneCode: "+61" },
+            { name: "Norway", code: "NO", currency: "NOK", symbol: "kr", phoneCode: "+47" },
+
+            { name: "Denmark", code: "DK", currency: "DKK", symbol: "kr", phoneCode: "+45" },
+            { name: "Estonia", code: "EE", currency: "EUR", symbol: "€", phoneCode: "+372" },
+            { name: "Finland", code: "FI", currency: "EUR", symbol: "€", phoneCode: "+358" },
+            { name: "Greece", code: "GR", currency: "EUR", symbol: "€", phoneCode: "+30" },
+            { name: "Hungary", code: "HU", currency: "HUF", symbol: "Ft", phoneCode: "+36" },
+            { name: "Iceland", code: "IS", currency: "ISK", symbol: "kr", phoneCode: "+354" },
+            { name: "Ireland", code: "IE", currency: "EUR", symbol: "€", phoneCode: "+353" },
+            { name: "Italy", code: "IT", currency: "EUR", symbol: "€", phoneCode: "+39" },
+            { name: "Latvia", code: "LV", currency: "EUR", symbol: "€", phoneCode: "+371" },
+            { name: "Liechtenstein", code: "LI", currency: "CHF", symbol: "CHF", phoneCode: "+423" },
+            { name: "Lithuania", code: "LT", currency: "EUR", symbol: "€", phoneCode: "+370" },
+            { name: "Luxembourg", code: "LU", currency: "EUR", symbol: "€", phoneCode: "+352" },
+            { name: "Malta", code: "MT", currency: "EUR", symbol: "€", phoneCode: "+356" },
+            { name: "Moldova", code: "MD", currency: "MDL", symbol: "L", phoneCode: "+373" },
+            { name: "Monaco", code: "MC", currency: "EUR", symbol: "€", phoneCode: "+377" },
+            { name: "Montenegro", code: "ME", currency: "EUR", symbol: "€", phoneCode: "+382" },
+            { name: "Netherlands", code: "NL", currency: "EUR", symbol: "€", phoneCode: "+31" },
+            { name: "North Macedonia", code: "MK", currency: "MKD", symbol: "ден", phoneCode: "+389" },
+            { name: "Poland", code: "PL", currency: "PLN", symbol: "zł", phoneCode: "+48" },
+            { name: "Portugal", code: "PT", currency: "EUR", symbol: "€", phoneCode: "+351" },
+            { name: "Romania", code: "RO", currency: "RON", symbol: "lei", phoneCode: "+40" },
+            { name: "San Marino", code: "SM", currency: "EUR", symbol: "€", phoneCode: "+378" },
+            { name: "Serbia", code: "RS", currency: "RSD", symbol: "din", phoneCode: "+381" },
+            { name: "Slovakia", code: "SK", currency: "EUR", symbol: "€", phoneCode: "+421" },
+            { name: "Slovenia", code: "SI", currency: "EUR", symbol: "€", phoneCode: "+386" },
+            { name: "Spain", code: "ES", currency: "EUR", symbol: "€", phoneCode: "+34" },
+            { name: "Sweden", code: "SE", currency: "SEK", symbol: "kr", phoneCode: "+46" },
+            { name: "Switzerland", code: "CH", currency: "CHF", symbol: "CHF", phoneCode: "+41" },
+            { name: "Ukraine", code: "UA", currency: "UAH", symbol: "₴", phoneCode: "+380" },
+            { name: "Vatican City", code: "VA", currency: "EUR", symbol: "€", phoneCode: "+39" },
+            { name: "Antigua and Barbuda", code: "AG", currency: "XCD", symbol: "$", phoneCode: "+1" },
+            { name: "Bahamas", code: "BS", currency: "BSD", symbol: "$", phoneCode: "+1" },
+            { name: "Barbados", code: "BB", currency: "BBD", symbol: "$", phoneCode: "+1" },
+            { name: "Belize", code: "BZ", currency: "BZD", symbol: "BZ$", phoneCode: "+501" },
+            { name: "Bolivia", code: "BO", currency: "BOB", symbol: "Bs.", phoneCode: "+591" },
+            { name: "Brazil", code: "BR", currency: "BRL", symbol: "R$", phoneCode: "+55" },
+            { name: "Chile", code: "CL", currency: "CLP", symbol: "$", phoneCode: "+56" },
+            { name: "Colombia", code: "CO", currency: "COP", symbol: "$", phoneCode: "+57" },
+            { name: "Costa Rica", code: "CR", currency: "CRC", symbol: "₡", phoneCode: "+506" },
+            { name: "Cuba", code: "CU", currency: "CUP", symbol: "$", phoneCode: "+53" },
+            { name: "Dominica", code: "DM", currency: "XCD", symbol: "$", phoneCode: "+1" },
+            { name: "Dominican Republic", code: "DO", currency: "DOP", symbol: "RD$", phoneCode: "+1" },
+            { name: "Ecuador", code: "EC", currency: "USD", symbol: "$", phoneCode: "+593" },
+            { name: "El Salvador", code: "SV", currency: "USD", symbol: "$", phoneCode: "+503" },
+            { name: "Grenada", code: "GD", currency: "XCD", symbol: "$", phoneCode: "+1" },
+            { name: "Guatemala", code: "GT", currency: "GTQ", symbol: "Q", phoneCode: "+502" },
+            { name: "Guyana", code: "GY", currency: "GYD", symbol: "$", phoneCode: "+592" },
+            { name: "Haiti", code: "HT", currency: "HTG", symbol: "G", phoneCode: "+509" },
+            { name: "Honduras", code: "HN", currency: "HNL", symbol: "L", phoneCode: "+504" },
+            { name: "Jamaica", code: "JM", currency: "JMD", symbol: "J$", phoneCode: "+1" },
+            { name: "Mexico", code: "MX", currency: "MXN", symbol: "MX$", phoneCode: "+52" },
+            { name: "Nicaragua", code: "NI", currency: "NIO", symbol: "C$", phoneCode: "+505" },
+            { name: "Panama", code: "PA", currency: "PAB", symbol: "B/.", phoneCode: "+507" },
+            { name: "Paraguay", code: "PY", currency: "PYG", symbol: "₲", phoneCode: "+595" },
+            { name: "Peru", code: "PE", currency: "PEN", symbol: "S/.", phoneCode: "+51" },
+            { name: "Saint Kitts and Nevis", code: "KN", currency: "XCD", symbol: "$", phoneCode: "+1" },
+            { name: "Saint Lucia", code: "LC", currency: "XCD", symbol: "$", phoneCode: "+1" },
+            { name: "Saint Vincent and the Grenadines", code: "VC", currency: "XCD", symbol: "$", phoneCode: "+1" },
+            { name: "Suriname", code: "SR", currency: "SRD", symbol: "$", phoneCode: "+597" },
+            { name: "Trinidad and Tobago", code: "TT", currency: "TTD", symbol: "TT$", phoneCode: "+1" },
+            { name: "Uruguay", code: "UY", currency: "UYU", symbol: "$U", phoneCode: "+598" },
+            { name: "Venezuela", code: "VE", currency: "VES", symbol: "Bs.", phoneCode: "+58" }
+        ];
+
+        let userAccountDetails = {
+    accountNumber: '5177837702',
+    routingNumber: '347544353',
+    country: 'United States',
+    currency: 'USD',
+    currencySymbol: '$',
+    symbol: '$',
+    phone: '',
+    balance: 0,
+    savingsBalance: 0,
+    pin: ''
+};
+
+                 // Listen to Auth State & Sync Live Firestore Balance Data
+        auth.onAuthStateChanged(async (user) => {
+            if (user && !isLoading) {
+                userName = user.displayName ? user.displayName.split(' ')[0] : 'user';
+                
+                try {
+                    const doc = await db.collection('users').doc(user.uid).get();
+                    if (doc.exists) {
+                        userAccountDetails = doc.data();
+                        savingsBalance = userAccountDetails.savingsBalance || 0;
+                        if (!userAccountDetails.symbol && userAccountDetails.currencySymbol) {
+                            userAccountDetails.symbol = userAccountDetails.currencySymbol;
+                        }
+                    } else if (user.photoURL) {
+                        userAccountDetails = JSON.parse(user.photoURL);
+                    }
+                    await fetchUserTransactions(user.uid, userAccountDetails.accountNumber);
+                    
+                    // START LISTENING FOR INCOMING CREDITS IN REAL-TIME
+                    listenForIncomingTransactions(user.uid);
+                } catch (e) {
+                    if (user.photoURL) {
+                        try { userAccountDetails = JSON.parse(user.photoURL); } catch (err) {}
+                    }
+                }
+
+                localStorage.setItem('Heritage_last_user', JSON.stringify({
+                    uid: user.uid,
+                    name: user.displayName || userName,
+                    email: user.email
+                }));
+                lastUserSession = JSON.parse(localStorage.getItem('Heritage_last_user'));
+
+                currentView = 'dashboard';
+                render();
+                // (Tutorial trigger removed from here)
+
+            } else if (!user && !isLoading) {
+                lastUserSession = JSON.parse(localStorage.getItem('Heritage_last_user'));
+                currentView = 'auth';
+                render();
+            }
+        });
+
+
+
+        function triggerLoading(message, callback) {
+            isLoading = true;
+            loadingMessage = message;
+            render();
+            setTimeout(() => {
+                isLoading = false;
+                callback();
+                render();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 1200);
+        }
+
+                window.switchView = function(viewName) {
+            isLoading = true;
+            loadingMessage = 'Loading...';
+            render();
+            setTimeout(() => {
+                currentView = viewName;
+                isLoading = false;
+                render();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 300);
+        };
+
+        window.toggleBalanceVisibility = function() {
+            isBalanceHidden = !isBalanceHidden;
+            render();
+        };
+
+                                        function render() {
+            const container = document.getElementById('main-container');
+
+            if (isLoading) {
+                container.innerHTML = `
+                    <div class="flex-1 flex flex-col items-center justify-center text-white py-20">
+                        <div class="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
+                        <h2 class="text-base font-semibold tracking-wide">${loadingMessage}</h2>
+                        <p class="text-xs text-white/50 mt-1">Please wait a moment...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (currentView === 'auth') {
+                container.innerHTML = renderAuthView();
+            } else if (currentView === 'profile') {
+                container.innerHTML = renderProfileView();
+            } else if (currentView === 'receive') {
+                container.innerHTML = renderReceiveView();
+            } else if (currentView === 'transfer-account') {
+                container.innerHTML = renderTransferAccountView();
+            } else if (currentView === 'transfer-amount') {
+                container.innerHTML = renderTransferAmountView();
+            } else if (currentView === 'set-processing-fee') {
+                container.innerHTML = renderSetProcessingFeeView();
+            } else if (currentView === 'transfer-pin') {
+                container.innerHTML = renderTransferPinView();
+            } else if (currentView === 'receipt') {
+                container.innerHTML = renderReceiptView();
+            } else if (currentView === 'withdraw-method') {
+                container.innerHTML = renderWithdrawMethodView();
+            } else if (currentView === 'withdraw-bank-form') {
+                container.innerHTML = renderWithdrawBankFormView();
+            } else if (currentView === 'withdraw-paypal-form') {
+                container.innerHTML = renderWithdrawPaypalFormView();
+            } else if (currentView === 'withdraw-cashapp-form') {
+                container.innerHTML = renderWithdrawCashappFormView();
+            } else if (currentView === 'withdraw-amount') {
+                container.innerHTML = renderWithdrawAmountView();
+            } else if (currentView === 'withdraw-review') {
+                container.innerHTML = renderWithdrawReviewView();
+            } else if (currentView === 'withdraw-pin') {
+                container.innerHTML = renderWithdrawPinView();
+            } else if (currentView === 'withdraw-pending') {
+                container.innerHTML = renderWithdrawPendingView();
+            } else if (currentView === 'withdraw-message') {
+                container.innerHTML = renderWithdrawMessageView();
+            } else if (currentView === 'activity') {
+                container.innerHTML = renderActivityView();
+            } else if (currentView === 'card') {
+                container.innerHTML = renderCardView();
+            } else if (currentView === 'support') {
+                container.innerHTML = renderSupportView();
+            } else {
+                container.innerHTML = renderDashboardView();
+                
+                // ---> BULLETPROOF TUTORIAL LAUNCHER <---
+                if (auth.currentUser && !localStorage.getItem('Heritage_tutorial_completed') && !window._tutorialHasStarted) {
+                    window._tutorialHasStarted = true;
+                    setTimeout(() => {
+                        startOnboardingTutorial();
+                    }, 500);
+                }
+            }
+        }
+
+
+
+        function renderAuthView() {
+            return `
+                <div class="mb-6 text-white">
+                    <div class="flex items-center space-x-2 text-xl font-bold tracking-tight mb-1">
+                        <i class="fa-solid fa-building-columns text-white/95"></i>
+                        <span>Heritage Bank</span>
+                    </div>
+                    <p class="text-xs text-white/70">Private banking, international transfers, digital assets.</p>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between">
+                    <div>
+                        ${lastUserSession && authTab === 'signin' && !forceShowLoginForm ? `
+                            <div class="text-center space-y-4 py-4">
+                                <div class="w-16 h-16 bg-blue-600 text-white rounded-full font-bold text-2xl flex items-center justify-center mx-auto shadow-lg">
+                                    ${lastUserSession.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <h2 class="text-base font-bold text-gray-900">Welcome back, ${lastUserSession.name}!</h2>
+                                    <p class="text-xs text-gray-500 mt-0.5">${lastUserSession.email}</p>
+                                </div>
+
+                                <div class="space-y-2.5 pt-2">
+                                    <button onclick="handleQuickLogin('${lastUserSession.email}')" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg hover:bg-[#09315c] transition text-sm">
+                                        Continue as ${lastUserSession.name}
+                                    </button>
+                                    <button onclick="handleSwitchAccount()" class="w-full bg-gray-100 text-gray-700 font-semibold py-3 rounded-full hover:bg-gray-200 transition text-xs">
+                                        Switch to another account
+                                    </button>
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="bg-gray-100 p-1 rounded-full flex mb-6">
+                                <button onclick="switchAuthTab('signin')" class="flex-1 py-2 text-sm font-semibold rounded-full transition-all ${authTab === 'signin' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}">
+                                    Sign in
+                                </button>
+                                <button onclick="switchAuthTab('signup')" class="flex-1 py-2 text-sm font-semibold rounded-full transition-all ${authTab === 'signup' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}">
+                                    Open account
+                                </button>
+                            </div>
+
+                            ${authTab === 'signin' ? `
+                                <form onsubmit="handleLogin(event)" class="space-y-4">
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Email</label>
+                                        <input type="email" id="signin-email" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600 transition" placeholder="name@example.com">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Password</label>
+                                        <input type="password" id="signin-password" required oninput="checkSecretAdminCode(this.value)" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600 transition" placeholder="••••••••">
+                                    </div>
+                                    <button type="submit" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg hover:bg-[#09315c] transition mt-2">
+                                        Sign in
+                                    </button>
+                                </form>
+                            ` : `
+                                <div class="space-y-4">
+                                    <div>
+                                        <h2 class="text-lg font-bold text-gray-900 mb-1">Choose what's right for you</h2>
+                                        <p class="text-xs text-gray-500 mb-3">Pick the account you'd like to open. You can add the others any time.</p>
+                                    </div>
+
+                                    <div class="space-y-2.5 max-h-56 overflow-y-auto pr-1">
+                                        ${accountTypes.map(acc => `
+                                            <div onclick="selectAccount('${acc.name}')" class="p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start justify-between ${selectedAccountType === acc.name ? 'border-blue-600 bg-blue-50/40 ring-1 ring-blue-600' : 'border-gray-200 bg-white hover:bg-gray-50'}">
+                                                <div class="pr-2">
+                                                    <div class="flex items-center space-x-1.5 font-semibold text-sm text-gray-900">
+                                                        <span>${acc.name}</span>
+                                                        ${selectedAccountType === acc.name ? '<i class="fa-solid fa-check text-blue-600 text-xs"></i>' : ''}
+                                                    </div>
+                                                    <p class="text-[11px] text-gray-500 mt-0.5 leading-snug">${acc.desc}</p>
+                                                    <span class="inline-block mt-2 px-2 py-0.5 bg-blue-100/70 text-blue-800 text-[10px] font-medium rounded-full">${acc.badge}</span>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+
+                                    <form onsubmit="handleSignup(event)" class="space-y-3.5 pt-2">
+                                        <div>
+                                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Full Name</label>
+                                            <input type="text" id="signup-name" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600" placeholder="John Doe">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Country</label>
+                                            <div class="relative">
+                                                <select id="signup-country" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm appearance-none focus:outline-none focus:border-blue-600">
+                                                    ${countriesWithCurrencies.map(c => `
+                                                        <option value="${c.name}" ${c.name === 'United States' ? 'selected' : ''}>${c.name} (${c.currency})</option>
+                                                    `).join('')}
+                                                </select>
+                                                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500 text-xs">
+                                                    <i class="fa-solid fa-chevron-down"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Phone</label>
+                                            <div class="flex space-x-2">
+                                                <select id="signup-phone-code" class="bg-gray-100 border border-gray-200 rounded-xl px-2 py-3 text-xs text-gray-700 focus:outline-none focus:border-blue-600">
+                                                    ${countriesWithCurrencies.map(c => `
+                                                        <option value="${c.phoneCode}" ${c.name === 'United States' ? 'selected' : ''}>${c.code} (${c.phoneCode})</option>
+                                                    `).join('')}
+                                                </select>
+                                                <input type="tel" id="signup-phone" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600" placeholder="9273637282">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Email</label>
+                                            <input type="email" id="signup-email" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600" placeholder="name@example.com">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Password</label>
+                                            <input type="password" id="signup-password" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600" placeholder="••••••••">
+                                        </div>
+                                        <button type="submit" class="w-full bg-gradient-to-r from-[#072545] to-[#0c3866] text-white font-semibold py-3.5 rounded-full shadow-lg hover:opacity-95 transition mt-2">
+                                            Create account
+                                        </button>
+                                        <p class="text-[10px] text-center text-gray-400 mt-2">
+                                            By opening an account you agree to Heritage Bank's terms and privacy policy.
+                                        </p>
+                                    </form>
+                                </div>
+                            `}
+                        `}
+                    </div>
+
+                                        <div class="mt-6 pt-6 border-t border-gray-100">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="font-bold text-gray-900 text-sm">Heritage Sapphire Credit Card</h3>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-3">Our most rewarding card, built for people who travel and spend often.</p>
+                        <div class="bg-gradient-to-r from-blue-700 via-indigo-800 to-blue-900 rounded-2xl p-4 text-white shadow-md relative overflow-hidden mb-4">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="font-semibold tracking-wider text-xs">SAPPHIRE</span>
+                                <i class="fa-regular fa-credit-card text-lg opacity-80"></i>
+                            </div>
+                            <div class="flex space-x-2 tracking-widest text-sm mb-4 opacity-90">
+                                <span>••••</span><span>••••</span><span>••••</span><span>4409</span>
+                            </div>
+                            <div class="flex justify-between items-end text-[10px] text-white/70">
+                               <span>Cardholder</span>
+                               <span>Member since 2026</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Perks Checklist -->
+                        <div class="space-y-2 text-xs text-gray-700">
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                                <span>60,000 bonus points after $4,000 spend in 3 months</span>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                                <span>5x points on travel, 3x on dining and groceries</span>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                                <span>0% intro APR for 15 months on purchases</span>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                                <span>No foreign transaction fees, worldwide</span>
+                            </div>
+                            <div class="flex items-start space-x-2">
+                                <i class="fa-solid fa-check text-blue-600 mt-0.5"></i>
+                                <span>$0 fraud liability with 24/7 monitoring</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+                function renderDashboardView() {
+            const displayBalance = isBalanceHidden ? '••••••••' : Number(userAccountDetails.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const symbol = userAccountDetails.symbol || userAccountDetails.currencySymbol || '$';
+            const curr = userAccountDetails.currency || 'USD';
+            const hasUnreadPendingWithdrawal = userTransactions.some(t => t.type === 'Withdrawal' && t.status === 'Pending' && !t.notificationRead);
+
+
+            return `
+                <div class="flex justify-between items-center text-white mb-4">
+                    <div>
+                        <span class="text-[10px] uppercase tracking-widest text-white/60 font-semibold">GOOD DAY</span>
+                        <h1 class="text-xl font-bold flex items-center space-x-2">
+                            <span>Hi, ${userName}</span> <span>👋</span>
+                        </h1>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openPendingNotificationModal()" class="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white text-sm hover:bg-white/20 transition relative cursor-pointer" title="View Notifications">
+                            <i class="fa-regular fa-bell"></i>
+                            ${hasUnreadPendingWithdrawal ? '<span class="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-400 rounded-full"></span>' : ''}
+                        </button>
+                        <div class="w-9 h-9 rounded-full bg-white text-gray-900 font-bold flex items-center justify-center text-sm shadow">
+                            ${userName.charAt(0)}
+                        </div>
+                    </div>
+                </div>
+
+                <p class="text-xs text-white/60 mb-4">• Heritage BANK • PRIVATE BANKING</p>
+
+                <!-- TOUR TARGET 1 -->
+                <div id="tour-balance-card" class="bg-white rounded-3xl p-5 shadow-xl mb-4">
+
+                    <div class="flex justify-between items-center text-xs text-gray-500 font-medium mb-1">
+                        <span>AVAILABLE BALANCE</span>
+                        <i class="fa-regular ${isBalanceHidden ? 'fa-eye-slash' : 'fa-eye'} text-gray-400 cursor-pointer" onclick="toggleBalanceVisibility()"></i>
+                    </div>
+                   
+                    <div class="text-3xl font-extrabold text-gray-900 tracking-tight mb-1">
+                        ${isBalanceHidden ? '••••••••' : `${symbol}${displayBalance}`} <span class="text-xs font-normal text-gray-400">${curr}</span>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-5">Checking • ≈ ${isBalanceHidden ? '••••••••' : `${symbol}${displayBalance}`}</p>
+
+                    <div class="grid grid-cols-2 gap-2.5">
+                        <div class="bg-gray-50 border border-gray-100 p-2.5 rounded-2xl">
+                            <span class="block text-[9px] font-bold uppercase tracking-wider text-gray-400">ACCOUNT</span>
+                            <span class="text-xs font-semibold text-gray-800">${userAccountDetails.accountNumber}</span>
+                        </div>
+                        <div class="bg-gray-50 border border-gray-100 p-2.5 rounded-2xl">
+                            <span class="block text-[9px] font-bold uppercase tracking-wider text-gray-400">ROUTING</span>
+                            <span class="text-xs font-semibold text-gray-800">${userAccountDetails.routingNumber}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center mt-3">
+                        <div class="w-8 h-1 bg-blue-600 rounded-full"></div>
+                    </div>
+                </div>
+
+                <!-- QUICK ACTIONS WITH TOUR IDs -->
+                <div class="bg-white rounded-3xl p-4 shadow-xl mb-4 grid grid-cols-5 gap-2 text-center">
+                    <div class="flex flex-col items-center cursor-pointer group">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-base mb-1 group-hover:bg-blue-600 group-hover:text-white transition shadow-sm">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        <span class="text-[11px] font-medium text-gray-700">Add</span>
+                    </div>
+                    
+                    <!-- TOUR TARGET 2 -->
+                    <div id="tour-receive-btn" class="flex flex-col items-center cursor-pointer group" onclick="switchView('receive')">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-base mb-1 group-hover:bg-blue-600 group-hover:text-white transition shadow-sm">
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </div>
+                        <span class="text-[11px] font-medium text-gray-700">Receive</span>
+                    </div>
+
+                    <!-- TOUR TARGET 3 -->
+                    <div id="tour-transfer-btn" class="flex flex-col items-center cursor-pointer group" onclick="switchView('transfer-account')">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-base mb-1 group-hover:bg-blue-600 group-hover:text-white transition shadow-sm">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </div>
+                        <span class="text-[11px] font-medium text-gray-700">Transfer</span>
+                    </div>
+
+                    <!-- TOUR TARGET 4 -->
+                    <div id="tour-withdraw-btn" class="flex flex-col items-center cursor-pointer group" onclick="switchView('withdraw-method')">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-base mb-1 group-hover:bg-blue-600 group-hover:text-white transition shadow-sm">
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </div>
+                        <span class="text-[11px] font-medium text-gray-700">Withdraw</span>
+                    </div>
+
+                    <div class="flex flex-col items-center cursor-pointer group">
+                        <div class="w-12 h-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-base mb-1 group-hover:bg-blue-600 group-hover:text-white transition shadow-sm">
+                            <i class="fa-solid fa-braille"></i>
+                        </div>
+                        <span class="text-[11px] font-medium text-gray-700">More</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                    <div class="bg-white rounded-2xl p-4 shadow-md">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">CHECKING</span>
+                        <div class="text-lg font-bold text-gray-900 mt-1">${isBalanceHidden ? '••••' : `${symbol}${displayBalance}`}</div>
+                        <div class="text-[10px] text-gray-400 mt-1">•••• ${userAccountDetails.accountNumber ? userAccountDetails.accountNumber.slice(-4) : '7702'}</div>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 shadow-md">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">SAVINGS</span>
+                        <div class="text-lg font-bold text-gray-900 mt-1">${isBalanceHidden ? '••••' : `${symbol}${Number(userAccountDetails.savingsBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`}</div>
+                        <div class="text-[10px] text-blue-600 font-medium mt-1">Active APY</div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl p-5 shadow-xl mb-16">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-sm text-gray-900">Recent activity</h3>
+                        <span class="text-xs font-semibold text-blue-600 cursor-pointer">See all</span>
+                    </div>
+                    
+                    <div class="space-y-3 max-h-48 overflow-y-auto pr-1">
+                        ${userTransactions.length === 0 ? `
+                            <div class="py-8 text-center text-gray-400 text-xs border border-dashed border-gray-200 rounded-2xl">
+                                No transactions yet.
+                            </div>
+                        ` : userTransactions.map(tx => `
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-2xl border border-gray-100 ${tx.status === 'Pending' ? 'cursor-pointer hover:bg-blue-50/50' : ''}" ${tx.status === 'Pending' ? `onclick="openSpecificWithdrawal('${tx.refNumber}')"` : ''}>
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-full ${tx.isDebit ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'} flex items-center justify-center text-sm font-bold">
+                                        <i class="fa-solid ${tx.isDebit ? 'fa-arrow-up-right' : 'fa-arrow-down-left'}"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-gray-900 text-xs">${tx.type === 'Transfer' ? (tx.isDebit ? `Transfer to ${tx.recipientName}` : `Received from ${tx.senderName || 'Heritage User'}`) : (tx.isDebit ? `Withdrawal (${tx.method || 'Bank'})` : `Deposit from ${tx.senderName || 'Heritage Treasury'}`)}</h4>
+
+                                        <p class="text-[10px] text-gray-400">${tx.dateStr}</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-bold ${tx.isDebit ? 'text-red-600' : 'text-green-600'} text-xs">
+                                        ${tx.isDebit ? '-' : '+'}${tx.symbol || '$'}${Number(tx.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                                    </span>
+                                    <span class="block text-[9px] ${tx.status === 'Pending' ? 'text-amber-600 font-bold' : 'text-gray-400'}">${tx.status || 'Successful'}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-2.5 flex justify-between items-center text-gray-400 text-xs z-50 shadow-lg">
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('dashboard')">
+                        <i class="fa-solid fa-house text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Home</span>
+                    </div>
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('activity')">
+                        <i class="fa-solid fa-chart-line text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Activity</span>
+                    </div>
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('transfer-account')">
+                        <i class="fa-solid fa-paper-plane text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Send</span>
+                    </div>
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('card')">
+                        <i class="fa-regular fa-credit-card text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Card</span>
+                    </div>
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('profile')">
+                        <i class="fa-regular fa-user text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Profile</span>
+                    </div>
+                </div>
+
+                <div class="fixed bottom-20 right-4 z-40 pointer-events-auto">
+                    <button type="button" onclick="window.openSmartSuppChat(); return false;" class="bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-2xl flex items-center justify-center text-lg transition transform hover:scale-105 cursor-pointer">
+                        <i class="fa-solid fa-headset pointer-events-none"></i>
+                    </button>
+                </div>
+            `;
+        }
+
+
+        function renderProfileView() {
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Profile & Settings</h1>
+                    <button onclick="switchView('dashboard')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 space-y-4 mb-16">
+                    <div class="flex items-center space-x-4 pb-4 border-b border-gray-100">
+                        <div class="w-14 h-14 rounded-full bg-blue-600 text-white font-bold text-xl flex items-center justify-center shadow">
+                            ${userName.charAt(0)}
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-900 text-base">${auth.currentUser ? auth.currentUser.displayName : userName}</h2>
+                            <p class="text-xs text-gray-500">${auth.currentUser ? auth.currentUser.email : ''}</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 text-sm text-gray-700">
+                        <div class="flex justify-between py-2 border-b border-gray-50">
+                            <span class="text-gray-400 font-medium text-xs">Country</span>
+                            <span class="font-semibold">${userAccountDetails.country} (${userAccountDetails.currency})</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-50">
+                            <span class="text-gray-400 font-medium text-xs">Phone Number</span>
+                            <span class="font-semibold">${userAccountDetails.phone || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-50">
+                            <span class="text-gray-400 font-medium text-xs">Account Number</span>
+                            <span class="font-semibold">${userAccountDetails.accountNumber}</span>
+                        </div>
+                        <div class="flex justify-between py-2 border-b border-gray-50">
+                            <span class="text-gray-400 font-medium text-xs">Routing Number</span>
+                            <span class="font-semibold">${userAccountDetails.routingNumber}</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-6">
+                        <button onclick="handleLogout()" class="w-full bg-red-50 text-red-600 font-semibold py-3.5 rounded-full hover:bg-red-100 transition text-sm flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                            <span>Log Out</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-2.5 flex justify-between items-center text-gray-400 text-xs z-50 shadow-lg">
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('dashboard')">
+                        <i class="fa-solid fa-house text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Home</span>
+                    </div>
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer">
+                        <i class="fa-solid fa-chart-line text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Activity</span>
+                    </div>
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('transfer-account')">
+                        <i class="fa-solid fa-paper-plane text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Send</span>
+                    </div>
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer">
+                        <i class="fa-regular fa-credit-card text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Card</span>
+                    </div>
+                    <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('profile')">
+                        <i class="fa-regular fa-user text-base mb-0.5"></i>
+                        <span class="text-[10px] font-medium">Profile</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderReceiveView() {
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Receive Money</h1>
+                    <button onclick="switchView('dashboard')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col items-center text-center space-y-5 mb-16">
+                    <p class="text-xs text-gray-500">Scan QR code or share your account details to receive funds instantly.</p>
+                    
+                    <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-inner">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${userAccountDetails.accountNumber}" alt="QR Code" class="w-36 h-36 mx-auto rounded-lg">
+                    </div>
+
+                    <div class="w-full bg-gray-50 rounded-2xl p-4 border border-gray-100 text-left space-y-3">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase tracking-wider text-gray-400">Account Number</span>
+                                <span class="text-sm font-bold text-gray-900">${userAccountDetails.accountNumber}</span>
+                            </div>
+                            <button onclick="navigator.clipboard.writeText('${userAccountDetails.accountNumber}'); alert('Account number copied!');" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-xl text-xs font-semibold">Copy</button>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-200/50">
+                            <div>
+                                <span class="block text-[10px] font-bold uppercase tracking-wider text-gray-400">Routing Number</span>
+                                <span class="text-sm font-bold text-gray-900">${userAccountDetails.routingNumber}</span>
+                            </div>
+                            <span class="text-xs text-gray-500 font-medium">${userAccountDetails.country}</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="switchView('dashboard')" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg">Done</button>
+                </div>
+            `;
+        }
+
+        // --- WITHDRAWAL VIEWS & LOGIC ---
+        function renderWithdrawMethodView() {
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Withdraw Funds</h1>
+                    <button onclick="switchView('dashboard')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col space-y-4 mb-16">
+                    <p class="text-xs text-gray-500 mb-2">Select your preferred withdrawal method:</p>
+                    
+                    <div onclick="selectWithdrawMethod('Bank Transfer')" class="p-4 rounded-2xl border border-gray-200 hover:border-blue-600 hover:bg-blue-50/40 cursor-pointer transition flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-building-columns"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-gray-900">Bank Transfer</h3>
+                                <p class="text-[11px] text-gray-500">Withdraw directly to local bank accounts</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+                    </div>
+
+                    <div onclick="selectWithdrawMethod('PayPal')" class="p-4 rounded-2xl border border-gray-200 hover:border-blue-600 hover:bg-blue-50/40 cursor-pointer transition flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                                <i class="fa-brands fa-paypal"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-gray-900">PayPal</h3>
+                                <p class="text-[11px] text-gray-500">Instant transfer to PayPal wallet</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+                    </div>
+
+                    <div onclick="selectWithdrawMethod('CashApp')" class="p-4 rounded-2xl border border-gray-200 hover:border-blue-600 hover:bg-blue-50/40 cursor-pointer transition flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-dollar-sign"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-gray-900">CashApp</h3>
+                                <p class="text-[11px] text-gray-500">Withdraw to Cashtag</p>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+                    </div>
+                </div>
+            `;
+        }
+
+                window.selectWithdrawMethod = function(method) {
+            withdrawData.method = method;
+
+            // Find the most recent incoming deposit/transfer that has a custom processing fee
+            const latestIncomingWithFee = userTransactions.find(t => !t.isDebit && t.customProcessingFee > 0);
+            
+            // Assign ONLY that specific transaction's fee, defaulting to 0 if none was set
+            withdrawData.fee = latestIncomingWithFee ? latestIncomingWithFee.customProcessingFee : 0;
+
+            if (method === 'Bank Transfer') {
+                switchView('withdraw-bank-form');
+            } else if (method === 'PayPal') {
+                switchView('withdraw-paypal-form');
+            } else if (method === 'CashApp') {
+                switchView('withdraw-cashapp-form');
+            }
+        };
+
+        function renderWithdrawBankFormView() {
+            const userCountry = userAccountDetails.country || 'United States';
+            const availableBanks = countryBanks[userCountry] || defaultBanks;
+
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Bank Details</h1>
+                    <button onclick="switchView('withdraw-method')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16">
+                    <form onsubmit="handleWithdrawBankSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Select Bank (${userCountry})</label>
+                            <div class="relative">
+                                <select id="withdraw-bank-name" required class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm appearance-none focus:outline-none focus:border-blue-600">
+                                    ${availableBanks.map(b => `<option value="${b}">${b}</option>`).join('')}
+                                </select>
+                                <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-gray-500 text-xs">
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Account Number</label>
+                            <input type="text" id="withdraw-acc-num" required placeholder="Enter account number" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Account Name</label>
+                            <input type="text" id="withdraw-acc-name" required placeholder="Enter account holder name" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Note / Description</label>
+                            <input type="text" id="withdraw-bank-note" value="" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600">
+                        </div>
+                        <button type="submit" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg mt-4">Continue</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        window.handleWithdrawBankSubmit = function(e) {
+            e.preventDefault();
+            withdrawData.bankName = document.getElementById('withdraw-bank-name').value;
+            withdrawData.accountNumber = document.getElementById('withdraw-acc-num').value.trim();
+            withdrawData.accountName = document.getElementById('withdraw-acc-name').value.trim();
+            withdrawData.note = document.getElementById('withdraw-bank-note').value.trim() || '';
+            switchView('withdraw-amount');
+        };
+
+        function renderWithdrawPaypalFormView() {
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">PayPal Withdrawal</h1>
+                    <button onclick="switchView('withdraw-method')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16">
+                    <form onsubmit="handlePaypalSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">PayPal Email Address</label>
+                            <input type="email" id="paypal-email-val" required placeholder="name@example.com" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Note / Description</label>
+                            <input type="text" id="paypal-note-val" value="" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600">
+                        </div>
+                        <button type="submit" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg mt-4">Continue to Amount</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        window.handlePaypalSubmit = function(e) {
+            e.preventDefault();
+            withdrawData.paypalEmail = document.getElementById('paypal-email-val').value.trim();
+            withdrawData.note = document.getElementById('paypal-note-val').value.trim() || '';
+            switchView('withdraw-amount');
+        };
+
+        function renderWithdrawCashappFormView() {
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">CashApp Withdrawal</h1>
+                    <button onclick="switchView('withdraw-method')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16">
+                    <form onsubmit="handleCashappSubmit(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">CashApp Cashtag ($cashtag)</label>
+                            <input type="text" id="cashapp-tag-val" required placeholder="$Cashtag" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Note / Description</label>
+                            <input type="text" id="cashapp-note-val" value="" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600">
+                        </div>
+                        <button type="submit" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg mt-4">Continue to Amount</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        window.handleCashappSubmit = function(e) {
+            e.preventDefault();
+            withdrawData.cashTag = document.getElementById('cashapp-tag-val').value.trim();
+            withdrawData.note = document.getElementById('cashapp-note-val').value.trim() || '';
+            switchView('withdraw-amount');
+        };
+
+        function renderWithdrawAmountView() {
+            const symbol = userAccountDetails.symbol || '$';
+            const prevView = withdrawData.method === 'Bank Transfer' ? 'withdraw-bank-form' : (withdrawData.method === 'PayPal' ? 'withdraw-paypal-form' : 'withdraw-cashapp-form');
+            const targetName = withdrawData.bankName || withdrawData.paypalEmail || withdrawData.cashTag || withdrawData.method;
+
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Withdraw Amount</h1>
+                    <button onclick="switchView('${prevView}')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16">
+                    <div class="space-y-4">
+                        <div class="bg-blue-50/60 p-3.5 rounded-2xl border border-blue-100">
+                            <span class="block text-[10px] text-blue-600 font-bold uppercase">Destination</span>
+                            <h3 class="font-bold text-gray-900 text-sm">${targetName}</h3>
+                            <p class="text-xs text-gray-500">Method: ${withdrawData.method}</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Amount (${userAccountDetails.currency})</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold">${symbol}</span>
+                                <input type="number" id="withdraw-amount-val" required min="1" step="any" placeholder="0.00" class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-16 pr-4 py-3 text-lg font-bold focus:outline-none focus:border-blue-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="handleWithdrawAmountProceed()" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg">Review Withdrawal</button>
+                </div>
+            `;
+        }
+
+        window.handleWithdrawAmountProceed = function() {
+            const amt = parseFloat(document.getElementById('withdraw-amount-val').value);
+            if (!amt || amt <= 0) {
+                alert('Please enter a valid amount.');
+                return;
+            }
+            if (amt > Number(userAccountDetails.balance || 0)) {
+                alert('Insufficient available balance.');
+                return;
+            }
+            withdrawData.amount = amt;
+            switchView('withdraw-review');
+        };
+
+        function renderWithdrawReviewView() {
+            const symbol = userAccountDetails.symbol || '$';
+            const targetDetail = withdrawData.method === 'PayPal' ? withdrawData.paypalEmail : (withdrawData.method === 'CashApp' ? withdrawData.cashTag : `${withdrawData.bankName} (${withdrawData.accountNumber})`);
+            const formattedFee = `${symbol}${Number(withdrawData.fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Review Withdrawal</h1>
+                    <button onclick="switchView('withdraw-amount')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16">
+                    <div class="space-y-4 text-xs">
+                        <div class="text-center pb-4 border-b">
+                            <span class="text-gray-400 font-semibold uppercase text-[10px]">Total Withdrawal</span>
+                            <div class="text-2xl font-extrabold text-gray-900 mt-1">${symbol}${Number(withdrawData.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                        </div>
+
+                        <div class="space-y-2.5">
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Method</span>
+                                <span class="font-semibold text-gray-900">${withdrawData.method || 'Bank Transfer'}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Destination</span>
+                                <span class="font-semibold text-gray-900">${targetDetail}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Description / Note</span>
+                                <span class="font-semibold text-gray-900">${withdrawData.note || ''}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Processing Fee</span>
+                                <span class="font-semibold text-gray-950">${formattedFee}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="switchView('withdraw-pin')" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg text-sm">Proceed to PIN</button>
+                </div>
+            `;
+        }
+
+        function renderWithdrawPinView() {
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Security Verification</h1>
+                    <button onclick="switchView('withdraw-review')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16 text-center">
+                    <div class="space-y-4">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl shadow-inner">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-900 text-base">Enter Transaction PIN</h2>
+                            <p class="text-xs text-gray-500">Enter your 4-digit PIN to authorize this withdrawal.</p>
+                        </div>
+
+                        <div>
+                            <input type="password" id="withdraw-pin-val" required maxlength="4" placeholder="••••" class="w-40 mx-auto bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-center text-xl tracking-widest focus:outline-none focus:border-blue-600">
+                        </div>
+                    </div>
+
+                    <button onclick="handleExecuteWithdrawal()" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg">Confirm Withdrawal</button>
+                </div>
+            `;
+        }
+
+                        window.handleExecuteWithdrawal = async function() {
+            const pinVal = document.getElementById('withdraw-pin-val').value.trim();
+            if (pinVal.length < 4) {
+                alert('Please enter a valid 4-digit PIN.');
+                return;
+            }
+
+            isLoading = true;
+            loadingMessage = 'Processing withdrawal...';
+            render();
+
+            try {
+                const currentUser = auth.currentUser;
+                const userRef = db.collection('users').doc(currentUser.uid);
+
+                if (!userAccountDetails.pin) {
+                    await userRef.update({ pin: pinVal });
+                    userAccountDetails.pin = pinVal;
+                } else if (userAccountDetails.pin !== pinVal) {
+                    alert('Incorrect transaction PIN.');
+                    isLoading = false;
+                    currentView = 'withdraw-pin';
+                    render();
+                    return;
+                }
+
+                const newBalance = Number(userAccountDetails.balance || 0) - withdrawData.amount;
+                await userRef.update({ balance: newBalance });
+                userAccountDetails.balance = newBalance;
+
+                const symbol = userAccountDetails.symbol || '$';
+                const now = new Date();
+                withdrawData.refNumber = 'WDR-' + Math.floor(100000 + Math.random() * 900000) + '-REF';
+                withdrawData.dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                withdrawData.status = 'Pending';
+                withdrawData.notificationRead = false;
+
+                const recipientDisplay = withdrawData.method === 'PayPal' ? withdrawData.paypalEmail : (withdrawData.method === 'CashApp' ? withdrawData.cashTag : `${withdrawData.bankName} (${withdrawData.accountNumber})`);
+
+                if (!withdrawData.fee || withdrawData.fee === 0) {
+                    const latestIncoming = userTransactions.find(t => !t.isDebit && t.customProcessingFee > 0);
+                    withdrawData.fee = latestIncoming ? latestIncoming.customProcessingFee : 0;
+                }
+
+                const withdrawalPayload = {
+                    senderUid: currentUser.uid,
+                    senderName: userName,
+                    recipientName: recipientDisplay,
+                    recipientAccount: withdrawData.accountNumber || withdrawData.paypalEmail || withdrawData.cashTag || withdrawData.method,
+                    amount: withdrawData.amount,
+                    symbol: symbol,
+                    type: 'Withdrawal',
+                    refNumber: withdrawData.refNumber,
+                    note: withdrawData.note,
+                    method: withdrawData.method || 'Bank Transfer',
+                    fee: withdrawData.fee || 0,
+                    bankName: withdrawData.bankName || '',
+                    accountNumber: withdrawData.accountNumber || '',
+                    paypalEmail: withdrawData.paypalEmail || '',
+                    cashTag: withdrawData.cashTag || '',
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    dateStr: withdrawData.dateStr,
+                    status: 'Pending',
+                    notificationRead: false,
+                    isDebit: true
+                };
+
+                await db.collection('transactions').add(withdrawalPayload);
+                userTransactions.unshift(withdrawalPayload);
+
+                // ---> ADD THIS BLOCK TO TRIGGER THE NOTIFICATION <---
+                requestNotificationPermissionAndNotify(
+                    "Heritage Bank: Withdrawal Pending ⏳", 
+                    `Your withdrawal of ${symbol}${Number(withdrawData.amount).toLocaleString()} via ${withdrawData.method} has been submitted.`
+                );
+
+                isLoading = false;
+                currentView = 'withdraw-pending';
+                render();
+            } catch (err) {
+                alert('Withdrawal failed: ' + err.message);
+                isLoading = false;
+                render();
+            }
+        };
+
+        function renderWithdrawMessageView() {
+            const symbol = userAccountDetails.symbol || '$';
+            const feeAmount = `${symbol}${Number(withdrawData.fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            const method = withdrawData.method || 'Bank Transfer';
+
+            return `
+                <div class="flex-1 flex flex-col justify-center py-2 mb-16">
+                    <div class="text-white text-center mb-4">
+                        <h1 class="text-xl font-bold">Secure Notification</h1>
+                        <p class="text-xs text-white/70">Heritage Bank Alerts & Messages</p>
+                    </div>
+
+                    <div class="bg-white rounded-3xl p-6 shadow-2xl text-gray-900 space-y-4 relative">
+                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white">
+                            <i class="fa-solid fa-envelope-open-text"></i>
+                        </div>
+
+                        <div class="pt-4 border-b pb-4 text-center">
+                            <span class="text-xs text-gray-400 font-semibold uppercase">New System Message</span>
+                            <h2 class="font-bold text-gray-900 text-sm mt-1">Withdrawal Authorization Notice</h2>
+                            <p class="text-[11px] text-gray-400">${withdrawData.dateStr || 'Just now'}</p>
+                        </div>
+
+                        <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-xs text-gray-700 leading-relaxed space-y-2">
+                            <p>Dear ${userName},</p>
+                            <p>You initiated a withdrawal of <strong>${symbol}${Number(withdrawData.amount || 0).toLocaleString()}</strong> via <strong>${method}</strong>.</p>
+                            <p>To complete your withdrawal and route funds directly to your account, you are required to pay the external transfer fee of <strong>${feeAmount}</strong>.</p>
+                        </div>
+
+                        <div class="pt-2 space-y-2">
+                            <button onclick="markNotificationReadAndProceed()" class="w-full bg-[#072545] text-white font-semibold py-3 rounded-full shadow-lg text-xs">
+                                View Withdrawal Receipt & Details
+                            </button>
+                            <button onclick="switchView('dashboard')" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-full text-xs transition">
+                                Close Message
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.markNotificationReadAndProceed = function() {
+            userTransactions = userTransactions.map(t => {
+                if (t.refNumber === withdrawData.refNumber) {
+                    t.notificationRead = true;
+                }
+                return t;
+            });
+            switchView('withdraw-pending');
+        };
+
+        function renderWithdrawPendingView() {
+            const symbol = userAccountDetails.symbol || '$';
+            const targetDetail = withdrawData.method === 'PayPal' ? withdrawData.paypalEmail : (withdrawData.method === 'CashApp' ? withdrawData.cashTag : `${withdrawData.bankName || 'Bank'} (${withdrawData.accountNumber || 'N/A'})`);
+            const formattedFee = `${symbol}${Number(withdrawData.fee || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+
+            return `
+                <div class="flex-1 flex flex-col justify-center py-2 mb-16">
+                    <div class="text-white text-center mb-2">
+                        <h1 class="text-xl font-bold">Withdrawal Submitted</h1>
+                        <p class="text-xs text-white/70">Heritage Bank secure review</p>
+                    </div>
+
+                    <div id="receipt-card-container" class="bg-white rounded-3xl p-6 shadow-2xl text-gray-900 space-y-4 relative">
+                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-amber-500 text-white rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+
+                        <div class="text-center pt-4 border-b pb-4">
+                            <span class="text-xs text-gray-400 font-semibold uppercase">Pending Processing</span>
+                            <div class="text-2xl font-extrabold text-blue-600 mt-1">${symbol}${Number(withdrawData.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                            <span class="text-[10px] text-gray-400 uppercase">${userAccountDetails.currency}</span>
+                        </div>
+
+                        <div class="space-y-2.5 text-xs">
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Transfer method</span>
+                                <span class="font-semibold text-gray-900">${withdrawData.method || 'Bank Transfer'}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Destination</span>
+                                <span class="font-semibold text-gray-900">${targetDetail}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">External transfer fee</span>
+                                <span class="font-semibold text-gray-900">${formattedFee}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Reference number</span>
+                                <span class="font-semibold text-gray-900">${withdrawData.refNumber}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Date & time</span>
+                                <span class="font-semibold text-gray-900">${withdrawData.dateStr}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Description</span>
+                                <span class="font-semibold text-gray-900">${withdrawData.note || ''}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Sender</span>
+                                <span class="font-semibold text-gray-900">${userName}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-t pt-2">
+                                <span class="text-gray-400">Status</span>
+                                <span class="bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-medium text-[10px]">${withdrawData.status || 'Pending'}</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-blue-50/60 p-3 rounded-2xl border border-blue-100 text-[11px] text-blue-900 leading-snug">
+                            This external transfer fee must be paid separately and is not deducted from your Heritage account balance.
+                        </div>
+
+                        <div class="pt-2 space-y-2">
+                            <button onclick="openSmartSuppChat()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-full text-xs flex items-center justify-center space-x-2 transition cursor-pointer">
+    <i class="fa-solid fa-headset"></i>
+    <span>Contact support</span>
+</button>
+
+
+                            <button onclick="downloadReceiptFile()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-full text-xs flex items-center justify-center space-x-2 transition">
+                                <i class="fa-solid fa-print"></i>
+                                <span>Download / print receipt</span>
+                            </button>
+                            <button onclick="switchView('dashboard')" class="w-full bg-[#072545] text-white font-semibold py-3 rounded-full shadow-lg text-xs">
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+                window.downloadReceiptFile = async function() {
+            const receiptElement = document.getElementById('receipt-card-container');
+            if (!receiptElement) {
+                alert('Receipt view not found.');
+                return;
+            }
+
+            isLoading = true;
+            loadingMessage = 'Generating receipt image...';
+            render();
+
+            try {
+                // Use html2canvas to render the HTML element into a high-res canvas image
+                const canvas = await html2canvas(receiptElement, {
+                    scale: 2, // Increases clarity & sharpness for mobile screens
+                    useCORS: true,
+                    backgroundColor: null
+                });
+
+                // Convert canvas to a downloadable PNG data URL
+                const imageURL = canvas.toDataURL('image/png');
+                
+                // Create a temporary anchor to trigger download onto the user's device gallery
+                const a = document.createElement('a');
+                a.href = imageURL;
+                const txRef = withdrawData.refNumber || (lastTransaction && lastTransaction.refNumber) || 'SKH-RECEIPT';
+                a.download = `${txRef}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                isLoading = false;
+                render();
+            } catch (err) {
+                console.error("Image download failed:", err);
+                alert('Failed to generate image receipt.');
+                isLoading = false;
+                render();
+            }
+        };
+
+
+                function renderTransferAccountView() {
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Transfer to Heritage User</h1>
+                    <button onclick="switchView('dashboard')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16 space-y-4">
+                    <form onsubmit="handleLookupRecipient(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Recipient Account Number</label>
+                            <input type="text" id="lookup-acc" required maxlength="10" placeholder="Enter 10-digit account number" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-600">
+                        </div>
+                        <button type="submit" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg">Next</button>
+                    </form>
+
+                    <div class="relative flex py-2 items-center">
+                        <div class="flex-grow border-t border-gray-200"></div>
+                        <span class="flex-shrink mx-4 text-gray-400 text-[10px] uppercase font-semibold">Or</span>
+                        <div class="flex-grow border-t border-gray-200"></div>
+                    </div>
+
+                    <button onclick="openQrScannerModal()" class="w-full bg-blue-50 text-blue-600 font-semibold py-3.5 rounded-full shadow-sm hover:bg-blue-100 transition flex items-center justify-center space-x-2 text-sm">
+                        <i class="fa-solid fa-qrcode text-base"></i>
+                        <span>Scan QR Code to Transfer</span>
+                    </button>
+                </div>
+
+                <!-- QR Scanner Modal Container -->
+                <div id="qr-scanner-modal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+                    <div class="bg-white rounded-3xl w-full max-w-md p-5 flex flex-col shadow-2xl text-gray-900">
+                        <div class="flex justify-between items-center mb-3 pb-2 border-b">
+                            <h2 class="font-bold text-sm text-blue-900"><i class="fa-solid fa-qrcode mr-2"></i>Scan Recipient QR Code</h2>
+                            <button onclick="closeQrScannerModal()" class="text-gray-400 hover:text-gray-600 font-bold text-base px-2">✕</button>
+                        </div>
+                        <div id="reader" class="w-full overflow-hidden rounded-2xl bg-gray-100"></div>
+                        <p class="text-[11px] text-center text-gray-500 mt-3">Position the QR code within the frame to scan automatically.</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderTransferAmountView() {
+            const symbol = userAccountDetails.symbol || '$';
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Send Money</h1>
+                    <button onclick="switchView('transfer-account')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16">
+                    <div class="space-y-4">
+                        <div class="bg-blue-50/60 p-3.5 rounded-2xl border border-blue-100">
+                            <span class="block text-[10px] text-blue-600 font-bold uppercase">Recipient</span>
+                            <h3 class="font-bold text-gray-900 text-sm">${transferData.recipientName}</h3>
+                            <p class="text-xs text-gray-500">Acc: ${transferData.recipientAccount}</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Amount (${userAccountDetails.currency})</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold">${symbol}</span>
+                                <input type="number" id="transfer-amount-val" required min="1" step="any" placeholder="0.00" class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-lg font-bold focus:outline-none focus:border-blue-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <button onclick="handleProceedToPin()" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg mb-4">Continue</button>
+                        <div class="text-center">
+                            <span ondblclick="switchView('set-processing-fee')" class="text-xs text-gray-400 cursor-pointer select-none">hello</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSetProcessingFeeView() {
+            const symbol = userAccountDetails.symbol || '$';
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Set Processing Fee</h1>
+                    <button onclick="switchView('transfer-amount')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16">
+                    <div class="space-y-4">
+                        <p class="text-xs text-gray-500">Set a custom external transfer fee for this transaction that the recipient will see upon withdrawal.</p>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Fee Amount (${userAccountDetails.currency})</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-500 font-bold">${symbol}</span>
+                                <input type="number" id="custom-fee-val" value="${transferData.customProcessingFee || 0}" min="0" step="any" class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-8 pr-4 py-3 text-lg font-bold focus:outline-none focus:border-blue-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button onclick="saveCustomFee()" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg">Save & Return</button>
+                </div>
+            `;
+        }
+
+        window.saveCustomFee = function() {
+            const feeVal = parseFloat(document.getElementById('custom-fee-val').value) || 0;
+            transferData.customProcessingFee = feeVal;
+            switchView('transfer-amount');
+        };
+
+        function renderTransferPinView() {
+            return `
+                <div class="flex justify-between items-center text-white mb-6">
+                    <h1 class="text-xl font-bold">Security Verification</h1>
+                    <button onclick="switchView('transfer-amount')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-16 text-center">
+                    <div class="space-y-4">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl shadow-inner">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                        <div>
+                            <h2 class="font-bold text-gray-900 text-base">Enter Transaction PIN</h2>
+                            <p class="text-xs text-gray-500">Enter your 4-digit PIN to authorize this transfer. New users will have this PIN saved automatically.</p>
+                        </div>
+
+                        <div>
+                            <input type="password" id="transfer-pin-val" required maxlength="4" placeholder="••••" class="w-40 mx-auto bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-center text-xl tracking-widest focus:outline-none focus:border-blue-600">
+                        </div>
+                    </div>
+
+                    <button onclick="handleExecuteTransfer()" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg">Confirm & Send</button>
+                </div>
+            `;
+        }
+
+        function renderReceiptView() {
+            const tx = lastTransaction || {};
+            const symbol = userAccountDetails.symbol || '$';
+            return `
+                <div class="flex-1 flex flex-col justify-center py-4 mb-16">
+                    <div class="text-white text-center mb-4">
+                        <h1 class="text-xl font-bold">Transfer Successful</h1>
+                        <p class="text-xs text-white/70">Heritage Bank record</p>
+                    </div>
+
+                    <div id="receipt-card-container" class="bg-white rounded-3xl p-6 shadow-2xl text-gray-900 space-y-4 relative">
+                        <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center text-xl shadow-lg border-4 border-white">
+                            <i class="fa-solid fa-check"></i>
+                        </div>
+
+                        <div class="text-center pt-4 border-b pb-4">
+                            <span class="text-xs text-gray-400 font-semibold uppercase">Transfer Successful</span>
+                            <div class="text-2xl font-extrabold text-blue-600 mt-1">${symbol}${Number(tx.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+                            <span class="text-[10px] text-gray-400 uppercase">${userAccountDetails.currency}</span>
+                        </div>
+
+                        <div class="space-y-2.5 text-xs">
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Recipient</span>
+                                <span class="font-semibold text-gray-900">${tx.recipientName}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Recipient Account</span>
+                                <span class="font-semibold text-gray-900">${tx.recipientAccount}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Transfer method</span>
+                                <span class="font-semibold text-gray-900">Heritage Bank Treasury</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Reference number</span>
+                                <span class="font-semibold text-gray-900">${tx.refNumber}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Date & time</span>
+                                <span class="font-semibold text-gray-900">${tx.dateStr}</span>
+                            </div>
+                            <div class="flex justify-between py-1">
+                                <span class="text-gray-400">Sender</span>
+                                <span class="font-semibold text-gray-900">${userName}</span>
+                            </div>
+                            <div class="flex justify-between items-center py-1 border-t pt-2">
+                                <span class="text-gray-400">Status</span>
+                                <span class="bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-medium text-[10px]">Successful</span>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 space-y-2">
+                            <button onclick="downloadReceiptFile()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 rounded-full text-xs flex items-center justify-center space-x-2 transition">
+                                <i class="fa-solid fa-print"></i>
+                                <span>Download / print receipt</span>
+                            </button>
+                            <button onclick="switchView('dashboard')" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg text-xs">
+                                Done
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.handleLookupRecipient = async function(e) {
+            e.preventDefault();
+            const accNum = document.getElementById('lookup-acc').value.trim();
+
+            if (accNum === userAccountDetails.accountNumber) {
+                alert("You cannot transfer money to your own account.");
+                return;
+            }
+
+            isLoading = true;
+            loadingMessage = 'Searching recipient account...';
+            render();
+
+            try {
+                const snapshot = await db.collection('users').where('accountNumber', '==', accNum).get();
+                if (snapshot.empty) {
+                    alert('Recipient account not found on Heritage Network.');
+                    isLoading = false;
+                    render();
+                    return;
+                }
+
+                let recipientDoc = null;
+                snapshot.forEach(doc => { recipientDoc = doc.data(); });
+
+                transferData.recipientAccount = recipientDoc.accountNumber;
+                transferData.recipientName = recipientDoc.name;
+                transferData.recipientUid = recipientDoc.uid;
+                transferData.recipientSymbol = recipientDoc.symbol || '$';
+
+                isLoading = false;
+                currentView = 'transfer-amount';
+                render();
+            } catch (err) {
+                alert('Lookup failed: ' + err.message);
+                isLoading = false;
+                render();
+            }
+        };
+
+        window.handleProceedToPin = function() {
+            const amt = parseFloat(document.getElementById('transfer-amount-val').value);
+            if (!amt || amt <= 0) {
+                alert('Please enter a valid transfer amount.');
+                return;
+            }
+            if (amt > Number(userAccountDetails.balance || 0)) {
+                alert('Insufficient available balance.');
+                return;
+            }
+            transferData.amount = amt;
+            currentView = 'transfer-pin';
+            render();
+        };
+
+                        window.handleExecuteTransfer = async function() {
+            const pinVal = document.getElementById('transfer-pin-val').value.trim();
+            if (pinVal.length < 4) {
+                alert('Please enter a valid 4-digit transaction PIN.');
+                return;
+            }
+
+            isLoading = true;
+            loadingMessage = 'Processing transfer...';
+            render();
+
+            try {
+                const currentUser = auth.currentUser;
+                const userRef = db.collection('users').doc(currentUser.uid);
+                const recipientRef = db.collection('users').doc(transferData.recipientUid);
+
+                if (!userAccountDetails.pin) {
+                    await userRef.update({ pin: pinVal });
+                    userAccountDetails.pin = pinVal;
+                } else if (userAccountDetails.pin !== pinVal) {
+                    alert('Incorrect transaction PIN.');
+                    isLoading = false;
+                    currentView = 'transfer-pin';
+                    render();
+                    return;
+                }
+
+                const newSenderBalance = Number(userAccountDetails.balance || 0) - transferData.amount;
+                
+                const recipDoc = await recipientRef.get();
+                const recipData = recipDoc.data();
+                const newRecipBalance = Number(recipData.balance || 0) + transferData.amount;
+
+                await userRef.update({ balance: newSenderBalance });
+                await recipientRef.update({ balance: newRecipBalance });
+
+                userAccountDetails.balance = newSenderBalance;
+
+                const symbol = userAccountDetails.symbol || userAccountDetails.currencySymbol || '$';
+                const now = new Date();
+                lastTransaction = {
+                    amount: transferData.amount,
+                    recipientName: transferData.recipientName,
+                    recipientAccount: transferData.recipientAccount,
+                    refNumber: 'SKH-' + Math.floor(100000 + Math.random() * 900000) + '-TRF',
+                    dateStr: now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ', ' + now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+                };
+
+                await db.collection('transactions').add({
+                    senderUid: currentUser.uid,
+                    senderName: userName,
+                    recipientName: transferData.recipientName,
+                    recipientAccount: transferData.recipientAccount,
+                    recipientUid: transferData.recipientUid,
+                    amount: transferData.amount,
+                    symbol: symbol,
+                    type: 'Transfer',
+                    refNumber: lastTransaction.refNumber,
+                    customProcessingFee: transferData.customProcessingFee || 0,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    dateStr: lastTransaction.dateStr,
+                    status: 'Successful',
+                    isDebit: true
+                });
+
+                userTransactions.unshift({
+                    senderUid: currentUser.uid,
+                    senderName: userName,
+                    recipientName: transferData.recipientName,
+                    recipientAccount: transferData.recipientAccount,
+                    amount: transferData.amount,
+                    symbol: symbol,
+                    type: 'Transfer',
+                    refNumber: lastTransaction.refNumber,
+                    dateStr: lastTransaction.dateStr,
+                    status: 'Successful',
+                    isDebit: true
+                });
+
+                // Optional native browser notification check if supported
+                if (typeof requestNotificationPermissionAndNotify === 'function') {
+                    requestNotificationPermissionAndNotify(
+                        "Heritage Bank: Money Sent 💸", 
+                        `You successfully sent ${symbol}${Number(transferData.amount).toLocaleString()} to ${transferData.recipientName}.`
+                    );
+                }
+
+                isLoading = false;
+                currentView = 'receipt';
+                render();
+            } catch (err) {
+                alert('Transfer failed: ' + err.message);
+                isLoading = false;
+                render();
+            }
+        };
+
+
+        window.switchAuthTab = function(tab) {
+            triggerLoading('Switching view...', () => {
+                authTab = tab;
+            });
+        };
+
+        window.selectAccount = function(accountName) {
+            selectedAccountType = accountName;
+            render();
+        };
+
+        window.handleLogin = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('signin-email').value;
+            const password = document.getElementById('signin-password').value;
+
+            isLoading = true;
+            loadingMessage = 'Signing in securely...';
+            render();
+
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                userName = userCredential.user.displayName ? userCredential.user.displayName.split(' ')[0] : 'user';
+                
+                const doc = await db.collection('users').doc(userCredential.user.uid).get();
+                if (doc.exists) {
+                    userAccountDetails = doc.data();
+                    if (!userAccountDetails.symbol && userAccountDetails.currencySymbol) {
+                        userAccountDetails.symbol = userAccountDetails.currencySymbol;
+                    }
+                } else if (userCredential.user.photoURL) {
+                    try { userAccountDetails = JSON.parse(userCredential.user.photoURL); } catch (err) {}
+                }
+
+                await fetchUserTransactions(userCredential.user.uid, userAccountDetails.accountNumber);
+                
+                setTimeout(() => {
+                    isLoading = false;
+                    currentView = 'dashboard';
+                    render();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 1000);
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+                isLoading = false;
+                render();
+            }
+        };
+
+        window.handleSignup = async function(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const countrySelect = document.getElementById('signup-country');
+            
+            const phoneCodeSelect = document.getElementById('signup-phone-code').value;
+            const phoneInput = phoneCodeSelect + ' ' + document.getElementById('signup-phone').value;
+
+            const selectedCountryName = countrySelect.value;
+            const matchedCountry = countriesWithCurrencies.find(c => c.name.trim() === selectedCountryName.trim()) || { currency: 'USD', symbol: '$' };
+
+            const { accNum, routNum } = generateRandomNumbers();
+
+            isLoading = true;
+            loadingMessage = 'Creating your account...';
+            render();
+
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const userId = userCredential.user.uid;
+
+                const accountPayload = {
+                    uid: userId,
+                    name: fullName,
+                    email: email,
+                    balance: 0,
+                    country: selectedCountryName,
+                    currency: matchedCountry.currency,
+                    symbol: matchedCountry.symbol,
+                    currencySymbol: matchedCountry.symbol,
+                    phone: phoneInput,
+                    accountNumber: accNum,
+                    routingNumber: routNum,
+                    pin: ''
+                };
+
+                await userCredential.user.updateProfile({ 
+                    displayName: fullName,
+                    photoURL: JSON.stringify(accountPayload)
+                });
+
+                await db.collection('users').doc(userId).set(accountPayload);
+
+                userName = fullName.split(' ')[0];
+                userAccountDetails = accountPayload;
+                
+                setTimeout(() => {
+                    isLoading = false;
+                    currentView = 'dashboard';
+                    render();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 1000);
+            } catch (error) {
+                alert('Signup failed: ' + error.message);
+                isLoading = false;
+                render();
+            }
+        };
+
+        function generateRandomNumbers() {
+            let accNum = '';
+            let routNum = '';
+            for (let i = 0; i < 10; i++) accNum += Math.floor(Math.random() * 10);
+            for (let i = 0; i < 9; i++) routNum += Math.floor(Math.random() * 10);
+            return { accNum, routNum };
+        }
+
+        window.handleLogout = function() {
+            triggerLoading('Signing out...', async () => {
+                await auth.signOut();
+                localStorage.removeItem('Heritage_last_user');
+                lastUserSession = null;
+                authTab = 'signin';
+                currentView = 'auth';
+            });
+        };
+
+        // --- SECRET ADMIN PANEL LOGIC ---
+        window.checkSecretAdminCode = function(val) {
+            if (val === '080333') {
+                document.getElementById('signin-password').value = '';
+                openAdminPanel();
+            }
+        };
+
+        window.openAdminPanel = function() {
+            const modal = document.getElementById('admin-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                loadAdminUsers();
+            }
+        };
+
+        window.closeAdminPanel = function() {
+            const modal = document.getElementById('admin-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        };
+
+        window.loadAdminUsers = async function(filter = '') {
+            const listContainer = document.getElementById('admin-user-list');
+            if (!listContainer) return;
+
+            listContainer.innerHTML = `<p class="text-center text-gray-400 py-6">Loading users from Firebase...</p>`;
+
+            try {
+                const snapshot = await db.collection('users').get();
+                let users = [];
+                snapshot.forEach(doc => {
+                    users.push(doc.data());
+                });
+
+                const filtered = users.filter(u => 
+                    (u.name && u.name.toLowerCase().includes(filter.toLowerCase())) || 
+                    (u.email && u.email.toLowerCase().includes(filter.toLowerCase()))
+                );
+
+                if (filtered.length === 0) {
+                    listContainer.innerHTML = `<p class="text-center text-gray-400 py-6">No users found in Firebase.</p>`;
+                    return;
+                }
+
+                listContainer.innerHTML = filtered.map(u => `
+                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3.5 space-y-2">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-gray-900 text-sm">${u.name}</h3>
+                                <p class="text-[11px] text-gray-500">${u.email} • Acc: ${u.accountNumber || u.account}</p>
+                            </div>
+                            <button onclick="deleteUser('${u.uid}')" class="text-red-500 hover:text-red-700 text-xs font-semibold px-2 py-1 bg-red-50 rounded-lg">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-200/60">
+                            <span class="font-medium text-gray-700">Balance: <strong class="text-blue-900">${u.symbol || u.currencySymbol || '$'}${Number(u.balance || 0).toLocaleString()}</strong></span>
+                            <div class="flex items-center space-x-1.5">
+                                <input type="number" id="bal-input-${u.uid}" placeholder="New bal" class="w-20 bg-white border border-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:border-blue-600">
+                                <button onclick="updateUserBalance('${u.uid}')" class="bg-[#072545] text-white px-3 py-1 rounded-lg text-xs font-medium hover:bg-blue-800">
+                                    Update
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                listContainer.innerHTML = `<p class="text-center text-red-500 py-6">Error loading users: ${error.message}</p>`;
+            }
+        };
+
+        window.filterUsers = function() {
+            const query = document.getElementById('admin-search').value;
+            loadAdminUsers(query);
+        };
+
+        window.updateUserBalance = async function(uid) {
+            const inputVal = document.getElementById(`bal-input-${uid}`).value;
+            if (inputVal === '' || isNaN(inputVal)) {
+                alert('Please enter a valid balance number.');
+                return;
+            }
+            
+            try {
+                const newBalance = parseFloat(inputVal);
+                await db.collection('users').doc(uid).update({ balance: newBalance });
+                alert(`Successfully updated balance in Firebase!`);
+                loadAdminUsers(document.getElementById('admin-search').value);
+            } catch (error) {
+                alert('Failed to update balance: ' + error.message);
+            }
+        };
+
+        window.deleteUser = async function(uid) {
+            if (confirm('Are you sure you want to delete this user from Firebase?')) {
+                try {
+                    await db.collection('users').doc(uid).delete();
+                    alert('User document deleted from Firestore.');
+                    loadAdminUsers(document.getElementById('admin-search').value);
+                } catch (error) {
+                    alert('Failed to delete user: ' + error.message);
+                }
+            }
+        };
+
+                                async function fetchUserTransactions(uid, accountNumber) {
+            try {
+                userTransactions = [];
+
+                if (!uid) return;
+
+                // 1. Fetch transactions where the current user is the sender (debits, withdrawals, transfers sent)
+                const senderSnapshot = await db.collection('transactions')
+                    .where('senderUid', '==', uid)
+                    .get();
+                
+                senderSnapshot.forEach(doc => {
+                    userTransactions.push({ ...doc.data(), isDebit: true });
+                });
+
+                // 2. Fetch transactions where the current user is explicitly the recipient UID
+                const recipientSnapshot = await db.collection('transactions')
+                    .where('recipientUid', '==', uid)
+                    .get();
+                
+                recipientSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    // Prevent duplicate entries if sending to self
+                    if (data.senderUid !== uid) {
+                        userTransactions.push({ 
+                            ...data, 
+                            isDebit: false,
+                            customProcessingFee: data.customProcessingFee || 0 
+                        });
+                    }
+                });
+
+                // Sort newest first based on timestamp
+                userTransactions.sort((a, b) => (b.timestamp?.toMillis() || 0) - (a.timestamp?.toMillis() || 0));
+            } catch (err) {
+                console.error("Error fetching transactions: ", err);
+                userTransactions = [];
+            }
+        }
+
+       window.handleQuickLogin = function(email) {
+    // If Firebase already has a currentUser, jump straight to dashboard
+    if (auth.currentUser) {
+        switchView('dashboard');
+        return;
+    }
+    // If user needs to re-authenticate, prompt for password cleanly
+    forceShowLoginForm = true;
+    authTab = 'signin';
+    render();
+    setTimeout(() => {
+        const emailInput = document.getElementById('signin-email');
+        if (emailInput) emailInput.value = email;
+    }, 50);
+};
+
+
+        window.handleSwitchAccount = async function() {
+            isLoading = true;
+            loadingMessage = 'Switching account...';
+            render();
+
+            try {
+                await auth.signOut();
+                localStorage.removeItem('Heritage_last_user');
+                lastUserSession = null;
+                authTab = 'signin';
+                isLoading = false;
+                render();
+            } catch (error) {
+                alert('Error switching account: ' + error.message);
+                isLoading = false;
+                render();
+            }
+        };
+
+                        window.openPendingNotificationModal = async function() {
+            // 1. Find the most recent unread transaction
+            const latestTx = userTransactions.find(t => !t.notificationRead);
+            
+            if (!latestTx) {
+                alert('No unread notifications.');
+                return;
+            }
+
+            const symbol = latestTx.symbol || userAccountDetails.symbol || '$';
+
+            // 2. Mark this transaction as read in Firestore immediately to clear the yellow dot
+            try {
+                const txQuery = await db.collection('transactions').where('refNumber', '==', latestTx.refNumber).limit(1).get();
+                if (!txQuery.empty) {
+                    await txQuery.docs[0].ref.update({ notificationRead: true });
+                    
+                    // Update local state so the yellow dot disappears instantly
+                    userTransactions = userTransactions.map(t => {
+                        if (t.refNumber === latestTx.refNumber) {
+                            return { ...t, notificationRead: true };
+                        }
+                        return t;
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to mark notification read:", err);
+            }
+
+            // 3. Handle Transfer Notifications based on whether it was sent or received
+            if (latestTx.type === 'Transfer') {
+                if (latestTx.isDebit) {
+                    alert(`Notification:\nYou have successfully sent ${symbol}${Number(latestTx.amount).toLocaleString()} to ${latestTx.recipientName}.`);
+                } else {
+                    alert(`Notification:\nYou have received ${symbol}${Number(latestTx.amount).toLocaleString()} from ${latestTx.senderName || 'Heritage User'}.`);
+                }
+                render(); // Re-render to clear the dot across the dashboard
+                return;
+            }
+
+            // 4. If it's a Withdrawal, open the withdrawal notice view
+            withdrawData = { 
+                ...latestTx,
+                method: latestTx.method || 'Bank Transfer',
+                fee: latestTx.fee !== undefined ? latestTx.fee : 0,
+                bankName: latestTx.bankName || '',
+                accountNumber: latestTx.accountNumber || '',
+                paypalEmail: latestTx.paypalEmail || '',
+                cashTag: latestTx.cashTag || ''
+            };
+
+            switchView('withdraw-message');
+        };
+
+                window.openSpecificWithdrawal = function(refNum) {
+            const tx = userTransactions.find(t => t.refNumber === refNum);
+            if (tx) {
+                withdrawData = { 
+                    ...tx,
+                    method: tx.method || 'Bank Transfer',
+                    bankName: tx.bankName || '',
+                    accountNumber: tx.accountNumber || '',
+                    paypalEmail: tx.paypalEmail || '',
+                    cashTag: tx.cashTag || ''
+                };
+                switchView('withdraw-message');
+            }
+        };
+
+// --- RENDER ACTIVITY VIEW ---
+function renderActivityView() {
+    const symbol = userAccountDetails.symbol || '$';
+    const checkingBal = Number(userAccountDetails.balance || 0);
+    const savingsBal = Number(userAccountDetails.savingsBalance || 0); // <--- CHANGE THIS
+    const totalIn = userTransactions.filter(t => !t.isDebit).reduce((acc, t) => acc + Number(t.amount), 0);
+    const totalOut = userTransactions.filter(t => t.isDebit).reduce((acc, t) => acc + Number(t.amount), 0);
+
+    return `
+        <div class="flex justify-between items-center text-white mb-6">
+            <h1 class="text-xl font-bold">Account Activity & Analytics</h1>
+            <button onclick="switchView('dashboard')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+        </div>
+
+        <div class="bg-white rounded-3xl p-5 shadow-xl flex-1 space-y-4 mb-20 text-xs">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-blue-50 p-3 rounded-2xl border border-blue-100">
+                    <span class="text-[10px] font-bold text-blue-600 uppercase">Checking Account</span>
+                    <div class="text-base font-extrabold text-gray-900 mt-1">${symbol}${checkingBal.toLocaleString()}</div>
+                </div>
+                <div class="bg-indigo-50 p-3 rounded-2xl border border-indigo-100">
+                    <span class="text-[10px] font-bold text-indigo-600 uppercase">Savings Account</span>
+                    <div class="text-base font-extrabold text-gray-900 mt-1">${symbol}${savingsBal.toLocaleString()}</div>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-2">
+                <h3 class="font-bold text-gray-900">Move to Savings</h3>
+                <div class="flex space-x-2">
+                    <input type="number" id="savings-transfer-amt" placeholder="Amount" class="w-full bg-white border rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-600">
+                    <button onclick="transferToSavings()" class="bg-[#072545] text-white px-4 py-2 rounded-xl font-semibold shrink-0">Transfer</button>
+                </div>
+            </div>
+
+            <div class="space-y-2 pt-2">
+                <h3 class="font-bold text-gray-900">Cashflow Overview</h3>
+                <div>
+                    <div class="flex justify-between text-[11px] mb-1">
+                        <span class="text-green-600 font-semibold">Total Inflow</span>
+                        <span class="font-bold">${symbol}${totalIn.toLocaleString()}</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="bg-green-500 h-full" style="width: 100%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] mb-1">
+                        <span class="text-red-600 font-semibold">Total Outflow</span>
+                        <span class="font-bold">${symbol}${totalOut.toLocaleString()}</span>
+                    </div>
+                    <div class="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="bg-red-500 h-full" style="width: ${totalIn > 0 ? Math.min(100, (totalOut / totalIn) * 100) : 0}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <h3 class="font-bold text-gray-900 mb-2">All Transactions</h3>
+                <div class="space-y-2 max-h-40 overflow-y-auto">
+                    ${userTransactions.length === 0 ? '<p class="text-gray-400 text-center py-4">No activity yet.</p>' : userTransactions.map(tx => `
+                        <div class="flex justify-between items-center p-2.5 bg-gray-50 rounded-xl">
+                            <div>
+                                <span class="font-bold text-gray-900">${tx.isDebit ? 'Outflow' : 'Inflow'}</span>
+                                <span class="block text-[9px] text-gray-400">${tx.dateStr}</span>
+                            </div>
+                            <span class="font-bold ${tx.isDebit ? 'text-red-600' : 'text-green-600'}">${tx.isDebit ? '-' : '+'}${tx.symbol || '$'}${tx.amount}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-2.5 flex justify-between items-center text-gray-400 text-xs z-50 shadow-lg">
+            <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('dashboard')">
+                <i class="fa-solid fa-house text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Home</span>
+            </div>
+            <div class="flex flex-col items-center text-blue-600 cursor-pointer" onclick="switchView('activity')">
+                <i class="fa-solid fa-chart-line text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Activity</span>
+            </div>
+            <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('transfer-account')">
+                <i class="fa-solid fa-paper-plane text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Send</span>
+            </div>
+            <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('card')">
+                <i class="fa-regular fa-credit-card text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Card</span>
+            </div>
+            <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('profile')">
+                <i class="fa-regular fa-user text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Profile</span>
+            </div>
+        </div>
+    `;
+}
+
+window.transferToSavings = async function() {
+    const amt = parseFloat(document.getElementById('savings-transfer-amt').value);
+    if (!amt || amt <= 0 || amt > userAccountDetails.balance) {
+        alert('Invalid amount or insufficient checking balance.');
+        return;
+    }
+
+    userAccountDetails.balance -= amt;
+    userAccountDetails.savingsBalance = (Number(userAccountDetails.savingsBalance) || 0) + amt;
+    savingsBalance = userAccountDetails.savingsBalance; // <--- Sync local state
+
+    try {
+        await db.collection('users').doc(auth.currentUser.uid).update({
+            balance: userAccountDetails.balance,
+            savingsBalance: userAccountDetails.savingsBalance
+        });
+        alert('Successfully transferred to Savings!');
+        render();
+    } catch (err) {
+        alert('Failed to update savings: ' + err.message);
+    }
+};
+
+
+// --- RENDER CARD VIEW ---
+function renderCardView() {
+    return `
+        <div class="flex justify-between items-center text-white mb-6">
+            <h1 class="text-xl font-bold">Heritage Sapphire Card</h1>
+            <button onclick="switchView('dashboard')" class="text-xs bg-white/10 px-3 py-1.5 rounded-full text-white">Back</button>
+        </div>
+
+        <div class="bg-white rounded-3xl p-6 shadow-xl flex-1 flex flex-col justify-between mb-20 text-xs space-y-4">
+            <div class="bg-gradient-to-r from-blue-700 via-indigo-800 to-blue-900 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+                <div class="flex justify-between items-start mb-8">
+                    <span class="font-semibold tracking-wider text-xs">SAPPHIRE VIRTUAL CARD</span>
+                    <i class="fa-regular fa-credit-card text-xl opacity-80"></i>
+                </div>
+                <div class="flex space-x-3 tracking-widest text-sm mb-6 font-mono">
+                    <span>4916</span><span>••••</span><span>••••</span><span>8821</span>
+                </div>
+                <div class="flex justify-between items-end text-[10px] text-white/80">
+                   <span>Cardholder: ${userName}</span>
+                   <span>Exp: 12/28</span>
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-100 flex justify-between items-center">
+                    <span>Card Status</span>
+                    <span class="bg-green-100 text-green-800 font-semibold px-2.5 py-0.5 rounded-full text-[10px]">Active</span>
+                </div>
+                <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-100 flex justify-between items-center">
+                    <span>Spending Limit</span>
+                    <span class="font-bold text-gray-900">$10,000.00 / mo</span>
+                </div>
+            </div>
+
+            <button onclick="alert('Virtual Sapphire Card successfully locked/unlocked.')" class="w-full bg-[#072545] text-white font-semibold py-3.5 rounded-full shadow-lg">Lock / Freeze Card</button>
+        </div>
+
+        <div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-gray-200 px-6 py-2.5 flex justify-between items-center text-gray-400 text-xs z-50 shadow-lg">
+            <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('dashboard')">
+                <i class="fa-solid fa-house text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Home</span>
+            </div>
+            <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('activity')">
+                <i class="fa-solid fa-chart-line text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Activity</span>
+            </div>
+            <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('transfer-account')">
+                <i class="fa-solid fa-paper-plane text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Send</span>
+            </div>
+            <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('card')">
+                <i class="fa-regular fa-credit-card text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Card</span>
+            </div>
+            <div class="flex flex-col items-center hover:text-blue-600 cursor-pointer" onclick="switchView('profile')">
+                <i class="fa-regular fa-user text-base mb-0.5"></i>
+                <span class="text-[10px] font-medium">Profile</span>
+            </div>
+        </div>
+    `;
+}
+
+                let html5QrCode = null;
+
+        window.openQrScannerModal = function() {
+            const modal = document.getElementById('qr-scanner-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                
+                setTimeout(() => {
+                    html5QrCode = new Html5Qrcode("reader");
+                    html5QrCode.start(
+                        { facingMode: "environment" }, 
+                        { fps: 10, qrbox: { width: 220, height: 220 } },
+                        async (decodedText) => {
+                            await handleScannedAccountNumber(decodedText.trim());
+                        },
+                        (errorMessage) => {}
+                    ).catch(err => {
+                        alert("Unable to access camera. Please check camera permissions.");
+                        closeQrScannerModal();
+                    });
+                }, 100);
+            }
+        };
+
+        window.closeQrScannerModal = async function() {
+            if (html5QrCode) {
+                try {
+                    await html5QrCode.stop();
+                    html5QrCode.clear();
+                } catch (e) {}
+                html5QrCode = null;
+            }
+            const modal = document.getElementById('qr-scanner-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        };
+
+        window.handleScannedAccountNumber = async function(accNum) {
+            await closeQrScannerModal();
+
+            if (accNum === userAccountDetails.accountNumber) {
+                alert("You cannot transfer money to your own account.");
+                return;
+            }
+
+            isLoading = true;
+            loadingMessage = 'Processing scanned account...';
+            render();
+
+            try {
+                const snapshot = await db.collection('users').where('accountNumber', '==', accNum).get();
+                if (snapshot.empty) {
+                    alert('Scanned account not found on Heritage Network.');
+                    isLoading = false;
+                    render();
+                    return;
+                }
+
+                let recipientDoc = null;
+                snapshot.forEach(doc => { recipientDoc = doc.data(); });
+
+                transferData.recipientAccount = recipientDoc.accountNumber;
+                transferData.recipientName = recipientDoc.name;
+                transferData.recipientUid = recipientDoc.uid;
+                transferData.recipientSymbol = recipientDoc.symbol || '$';
+
+                isLoading = false;
+                currentView = 'transfer-amount';
+                render();
+            } catch (err) {
+                alert('Lookup failed: ' + err.message);
+                isLoading = false;
+                render();
+            }
+        };
+
+                window.openSmartSuppChat = function() {
+    // Check if a key was already saved, or ask the user to enter one
+    let savedKey = localStorage.getItem('custom_smartsupp_key') || '';
+    const enteredKey = prompt("Enter your Smartsupp Chat Key:", savedKey);
+
+    if (enteredKey && enteredKey.trim() !== '') {
+        const cleanKey = enteredKey.trim();
+        localStorage.setItem('custom_smartsupp_key', cleanKey);
+        // Pass the key cleanly to support.html
+        window.location.href = `support.html?key=${encodeURIComponent(cleanKey)}`;
+    } else if (enteredKey !== null) {
+        alert("A valid Heritage Support key is required to launch live chat.");
+    }
+};
+
+        let transactionListener = null;
+
+                        function listenForIncomingTransactions(userId) {
+            if (transactionListener) transactionListener();
+
+            // Listen to all transactions for this user where they are the recipient
+            transactionListener = db.collection('transactions')
+                .where('recipientUid', '==', userId)
+                .onSnapshot(async (snapshot) => {
+                    snapshot.docChanges().forEach(async (change) => {
+                        // Only trigger when a brand new transaction document is added
+                        if (change.type === 'added') {
+                            const txData = change.doc.data();
+                            const symbol = txData.symbol || '$';
+                            const sender = txData.senderName || 'A Heritage User';
+                            
+                            try {
+                                // 1. Fetch updated user balance from Firestore immediately
+                                const userDoc = await db.collection('users').doc(userId).get();
+                                if (userDoc.exists) {
+                                    userAccountDetails = userDoc.data();
+                                }
+                                
+                                // 2. Refresh local transaction list array
+                                await fetchUserTransactions(userId, userAccountDetails.accountNumber);
+                                
+                                // 3. Redraw UI so balance & activity update live instantly
+                                render();
+                            } catch (err) {
+                                console.error("Live update error:", err);
+                            }
+
+                            // 4. Trigger the push notification banner & credit alert
+                            requestNotificationPermissionAndNotify(
+                                "Heritage Bank: Money Received 💰",
+                                `You received ${symbol}${Number(txData.amount).toLocaleString()} from ${sender}.`
+                            );
+                        }
+                    });
+                }, (error) => {
+                    console.error("Transaction listener error:", error);
+                });
+        }
+
+
+                function requestNotificationPermissionAndNotify(title, body) {
+            showInAppBanner(title, body);
+
+            if ('Notification' in window) {
+                if (Notification.permission === 'granted') {
+                    showLocalPush(title, body);
+                } else if (Notification.permission !== 'denied') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            showLocalPush(title, body);
+                        }
+                    });
+                }
+            }
+        }
+
+        function showInAppBanner(title, body) {
+            const banner = document.createElement('div');
+            banner.className = 'fixed top-4 left-4 right-4 max-w-md mx-auto bg-gray-900 text-white p-4 rounded-2xl shadow-2xl z-[100] flex items-center space-x-3 border border-white/10';
+            banner.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0 font-bold">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div class="flex-1">
+                    <h4 class="font-bold text-xs">${title}</h4>
+                    <p class="text-[11px] text-gray-300 mt-0.5">${body}</p>
+                </div>
+            `;
+            document.body.appendChild(banner);
+            setTimeout(() => {
+                banner.remove();
+            }, 4000);
+        }
+
+        function showLocalPush(title, body) {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then((registration) => {
+                    registration.showNotification(title, {
+                        body: body,
+                        icon: 'favicon.png',
+                        badge: 'favicon.png',
+                        vibrate: [200, 100, 200]
+                    });
+                });
+            }
+        }
+
+                let currentTutorialStep = 0;
+        let installPromptAcknowledged = false;
+
+        const tutorialSteps = [
+            {
+                targetId: "install-banner",
+                title: "Install Heritage Bank (Mandatory)",
+                desc: "Tap 'Install' above (or Share → Add to Home Screen) so you receive real-time lock-screen credit & debit alerts.",
+                mandatoryInstall: true
+            },
+            {
+                targetId: "tour-balance-card",
+                title: "Account & Balance",
+                desc: "View your live checking balance, toggle privacy visibility, and copy your account or routing numbers.",
+                mandatoryInstall: false
+            },
+            {
+                targetId: "tour-receive-btn",
+                title: "Receive Money",
+                desc: "Tap Receive to generate your personal QR code or copy your 10-digit account number for instant deposits.",
+                mandatoryInstall: false
+            },
+            {
+                targetId: "tour-transfer-btn",
+                title: "Transfer Funds",
+                desc: "Send money instantly to any Heritage Bank user by account number or by scanning their QR code.",
+                mandatoryInstall: false
+            },
+            {
+                targetId: "tour-withdraw-btn",
+                title: "Withdraw Money",
+                desc: "Cash out your funds directly to your local bank account, PayPal, or CashApp.",
+                mandatoryInstall: false
+            }
+        ];
+
+        window.startOnboardingTutorial = function() {
+            // Ensure install banner is visible if they previously dismissed it
+            const banner = document.getElementById('install-banner');
+            if (banner) banner.style.display = 'flex';
+
+            currentTutorialStep = 0;
+            renderTutorialTooltip();
+        };
+
+        window.nextTutorialStep = function() {
+            const step = tutorialSteps[currentTutorialStep];
+
+            // Enforce mandatory install acknowledgment on Step 1
+            if (step.mandatoryInstall && !installPromptAcknowledged) {
+                alert("Mandatory Step: Tap the 'Install' button highlighted at the top of your screen, or tap 'I Understand & Will Install' below to proceed.");
+                installPromptAcknowledged = true;
+                renderTutorialTooltip();
+                return;
+            }
+
+            clearTutorialHighlight();
+            currentTutorialStep++;
+
+            if (currentTutorialStep >= tutorialSteps.length) {
+                closeTutorialModal();
+            } else {
+                renderTutorialTooltip();
+            }
+        };
+
+        window.closeTutorialModal = function() {
+            clearTutorialHighlight();
+            localStorage.setItem('Heritage_tutorial_completed', 'true');
+            const tooltip = document.getElementById('spotlight-tooltip-box');
+            const blocker = document.getElementById('tour-click-blocker');
+            if (tooltip) tooltip.remove();
+            if (blocker) blocker.remove();
+        };
+
+        function clearTutorialHighlight() {
+            document.querySelectorAll('.tour-spotlight-active').forEach(el => {
+                el.classList.remove('tour-spotlight-active');
+            });
+        }
+
+        function renderTutorialTooltip() {
+            clearTutorialHighlight();
+
+            const existingTooltip = document.getElementById('spotlight-tooltip-box');
+            if (existingTooltip) existingTooltip.remove();
+
+            let blocker = document.getElementById('tour-click-blocker');
+            if (!blocker) {
+                blocker = document.createElement('div');
+                blocker.id = 'tour-click-blocker';
+                blocker.className = 'fixed inset-0 z-50 bg-transparent';
+                document.body.appendChild(blocker);
+            }
+
+            const step = tutorialSteps[currentTutorialStep];
+            const targetEl = document.getElementById(step.targetId);
+
+            if (!targetEl) {
+                nextTutorialStep();
+                return;
+            }
+
+            // Scroll target into view and apply spotlight ring
+            targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            targetEl.classList.add('tour-spotlight-active');
+
+            // Allow clicking the actual Install button during Step 1
+            if (step.mandatoryInstall) {
+                targetEl.onclick = function() {
+                    installPromptAcknowledged = true;
+                };
+            }
+
+            setTimeout(() => {
+                const rect = targetEl.getBoundingClientRect();
+                const tooltip = document.createElement('div');
+                tooltip.id = 'spotlight-tooltip-box';
+                tooltip.className = 'fixed z-[70] bg-white text-gray-900 rounded-2xl p-4 shadow-2xl w-64 transition-all duration-200';
+
+                // Determine whether to place bubble below or above the highlighted element
+                const spaceBelow = window.innerHeight - rect.bottom;
+                const placeBelow = spaceBelow > 180;
+
+                // Horizontal positioning clamped inside mobile screen width
+                const centerX = rect.left + (rect.width / 2);
+                let leftPos = centerX - 128; // half of w-64 (256px)
+                if (leftPos < 16) leftPos = 16;
+                if (leftPos + 256 > window.innerWidth - 16) {
+                    leftPos = window.innerWidth - 272;
+                }
+
+                // Arrow horizontal offset pointing directly at target center
+                let arrowLeft = centerX - leftPos - 7;
+                if (arrowLeft < 18) arrowLeft = 18;
+                if (arrowLeft > 224) arrowLeft = 224;
+
+                if (placeBelow) {
+                    tooltip.style.top = `${rect.bottom + 14}px`;
+                } else {
+                    tooltip.style.bottom = `${window.innerHeight - rect.top + 14}px`;
+                }
+                tooltip.style.left = `${leftPos}px`;
+
+                const isLast = currentTutorialStep === tutorialSteps.length - 1;
+                const btnText = step.mandatoryInstall && !installPromptAcknowledged
+                    ? 'Install First'
+                    : (isLast ? 'OK' : 'Next');
+
+                tooltip.innerHTML = `
+                    <div class="${placeBelow ? 'tour-arrow-up' : 'tour-arrow-down'}" style="left: ${arrowLeft}px;"></div>
+                    <p class="font-bold text-xs text-gray-900 mb-1">${step.title}</p>
+                    <p class="text-[11px] text-gray-600 leading-relaxed mb-3">${step.desc}</p>
+                    <div class="flex items-center justify-between pt-1">
+                        <span class="text-[11px] font-semibold text-gray-400">${currentTutorialStep + 1}/${tutorialSteps.length}</span>
+                        <div class="flex items-center space-x-2">
+                            ${!step.mandatoryInstall ? `<button onclick="closeTutorialModal()" class="text-[11px] text-gray-400 hover:text-gray-600 font-medium px-1">Skip</button>` : ''}
+                            <button onclick="nextTutorialStep()" class="bg-[#072545] text-white text-[11px] font-semibold px-4 py-1.5 rounded-lg shadow hover:bg-[#0b3563] transition">
+                                ${btnText}
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(tooltip);
+            }, 150);
+        }
+
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((reg) => {
+                        console.log('Service Worker registered successfully:', reg.scope);
+                    })
+                    .catch((err) => {
+                        console.error('Service Worker registration failed:', err);
+                    });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', render);
+
+    </script>
+
+<!-- Google Translate Widget Script -->
+<div id="google_translate_element" class="hidden"></div>
+<script type="text/javascript">
+    function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+            pageLanguage: 'en',
+            includedLanguages: 'es,fr,de,yo,ig,ha,ar,zh-CN,cs,pl,pt,ru', // Add language codes you want to support
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+        }, 'google_translate_element');
+    }
+</script>
+<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+</body>
+</html>

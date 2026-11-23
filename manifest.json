@@ -1,0 +1,21 @@
+{
+  "name": "Heritage Globus Bank",
+  "short_name": "Heritage",
+  "description": "Private banking, international transfers, digital assets.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#051937",
+  "theme_color": "#071e3d",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

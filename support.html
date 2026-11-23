@@ -2,34 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Heritage Support</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #051937; }
+        /* Force Smartsupp chat box to occupy the full page area cleanly */
+        #smartsupp-widget, div[id^="smartsupp-"] {
+            position: relative !important;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
 </head>
-<body class="bg-[#051937] text-white min-h-screen flex flex-col items-center justify-center p-6">
+<body class="h-screen flex flex-col overflow-hidden text-gray-900">
 
-    <div class="bg-white text-gray-900 rounded-3xl p-6 max-w-md w-full shadow-2xl text-center space-y-4">
-        <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto text-xl shadow-md">
-            <i class="fa-solid fa-headset"></i>
+    <!-- Top Navigation Bar -->
+    <div class="bg-[#072545] text-white px-4 py-3 flex items-center justify-between border-b border-white/10 shrink-0 shadow-md">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs text-white">
+                <i class="fa-solid fa-headset"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-sm leading-tight text-white">Heritage Live Support</h1>
+                <span id="key-badge" class="text-[10px] text-emerald-400 font-medium">● Connected</span>
+            </div>
         </div>
-        <h1 class="text-xl font-bold text-[#072545]">Live Customer Support</h1>
-        <p id="status-text" class="text-xs text-gray-500">Initializing secure chat session...</p>
-        
-        <div class="pt-2 space-y-2.5">
-            <button onclick="forceOpenChat()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-full text-xs shadow transition cursor-pointer">
-                Open Chat Window
+
+        <div class="flex items-center space-x-2">
+            <button onclick="changeSmartsuppKey()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-full text-[11px] font-medium transition cursor-pointer">
+                Change Key
             </button>
-            <button onclick="changeSmartsuppKey()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-full text-xs transition cursor-pointer">
-                Change Smartsupp Key
-            </button>
-            <button onclick="window.location.href='index.html'" class="w-full bg-[#072545] hover:opacity-95 text-white font-semibold py-3 rounded-full text-xs transition cursor-pointer">
-                Back to Banking
+            <button onclick="window.location.href='index.html'" class="bg-white text-[#072545] px-3.5 py-1.5 rounded-full text-[11px] font-bold shadow transition cursor-pointer">
+                Back
             </button>
         </div>
     </div>
 
-    <!-- Smartsupp Script Loader & Control -->
+    <!-- Chat Container Area -->
+    <div class="flex-1 w-full bg-white relative flex flex-col" id="chat-host-area">
+        <div id="loading-notice" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 text-xs space-y-2 bg-gray-50 z-10">
+            <div class="w-8 h-8 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin"></i></div>
+            <span>Connecting to agent node...</span>
+        </div>
+    </div>
+
+    <!-- Smartsupp Initialization Script -->
     <script type="text/javascript">
         const urlParams = new URLSearchParams(window.location.search);
         let activeKey = (urlParams.get('key') || localStorage.getItem('custom_smartsupp_key') || '').trim();
@@ -39,12 +61,12 @@
             localStorage.setItem('custom_smartsupp_key', activeKey);
         }
 
-        document.getElementById('status-text').innerText = `Connected to Agent Node (${activeKey.slice(0, 6)}...)`;
+        document.getElementById('key-badge').innerText = `● Key: ${activeKey.slice(0, 6)}...`;
 
-        // Initialize Smartsupp Global Object
+        // Configure Smartsupp variables
         var _smartsupp = _smartsupp || {};
         _smartsupp.key = activeKey;
-
+        
         window.smartsupp || (function (d) {
             var s, c, o = smartsupp = function () {
                 o._.push(arguments)
@@ -59,36 +81,30 @@
             s.parentNode.insertBefore(c, s);
         })(document);
 
-        // Auto-open chat once script initializes
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                forceOpenChat();
-            }, 1500);
+        // Once Smartsupp renders, expand it to fill the screen and remove loading spinner
+        smartsupp('on', 'rendered', function() {
+            const loader = document.getElementById('loading-notice');
+            if (loader) loader.remove();
+            smartsupp('chat:show');
+            smartsupp('chat:open');
         });
 
-        function forceOpenChat() {
-            try {
-                if (typeof smartsupp === 'function') {
-                    smartsupp('chat:show');
-                    smartsupp('chat:open');
-                    document.getElementById('status-text').innerText = 'Chat window active and online.';
-                } else {
-                    // Fallback command via queue if function isn't bound yet
-                    window.smartsupp('chat:show');
-                    window.smartsupp('chat:open');
-                    document.getElementById('status-text').innerText = 'Chat window active.';
-                }
-            } catch (err) {
-                console.error(err);
-                alert("Please ensure your browser is not blocking third-party scripts or cookies.");
+        // Fallback timer in case the event takes a second
+        setTimeout(() => {
+            const loader = document.getElementById('loading-notice');
+            if (loader) loader.remove();
+            if (typeof smartsupp === 'function') {
+                smartsupp('chat:show');
+                smartsupp('chat:open');
             }
-        }
+        }, 3000);
 
         function changeSmartsuppKey() {
-            const newKey = prompt("Enter a new Smartsupp Key:", activeKey);
+            const newKey = prompt("Enter a new Smartsupp Chat Key:", activeKey);
             if (newKey && newKey.trim() !== '') {
-                localStorage.setItem('custom_smartsupp_key', newKey.trim());
-                window.location.href = `support.html?key=${encodeURIComponent(newKey.trim())}`;
+                const cleanKey = newKey.trim();
+                localStorage.setItem('custom_smartsupp_key', cleanKey);
+                window.location.href = `support.html?key=${encodeURIComponent(cleanKey)}`;
             }
         }
     </script>

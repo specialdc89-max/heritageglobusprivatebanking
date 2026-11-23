@@ -5,53 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Heritage Support</title>
     <script src="https://cdn.tailwindcss.com"></script>
-<style>
-    /* Force Smartsupp chat window to float correctly over everything on mobile */
-    iframe[src*="smartsupp"] {
-        position: fixed !important;
-        bottom: 20px !important;
-        right: 20px !important;
-        z-index: 999999 !important;
-        max-width: 100vw !important;
-        max-height: 100vh !important;
-    }
-</style>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-[#051937] text-white min-h-screen flex flex-col items-center justify-center p-6">
 
     <div class="bg-white text-gray-900 rounded-3xl p-6 max-w-md w-full shadow-2xl text-center space-y-4">
+        <div class="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center mx-auto text-xl shadow-md">
+            <i class="fa-solid fa-headset"></i>
+        </div>
         <h1 class="text-xl font-bold text-[#072545]">Live Customer Support</h1>
-        <p id="status-text" class="text-xs text-gray-500">Connecting you to your dedicated support agent...</p>
+        <p id="status-text" class="text-xs text-gray-500">Initializing secure chat session...</p>
         
         <div class="pt-2 space-y-2.5">
-            <button onclick="forceOpenChat()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-full text-xs shadow">
+            <button onclick="forceOpenChat()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-full text-xs shadow transition cursor-pointer">
                 Open Chat Window
             </button>
-            <button onclick="changeSmartsuppKey()" class="w-full bg-blue-50 text-blue-600 font-semibold py-2.5 rounded-full text-xs">
+            <button onclick="changeSmartsuppKey()" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2.5 rounded-full text-xs transition cursor-pointer">
                 Change Smartsupp Key
             </button>
-            <button onclick="window.location.href='index.html'" class="w-full bg-[#072545] text-white font-semibold py-3 rounded-full text-xs">
+            <button onclick="window.location.href='index.html'" class="w-full bg-[#072545] hover:opacity-95 text-white font-semibold py-3 rounded-full text-xs transition cursor-pointer">
                 Back to Banking
             </button>
         </div>
     </div>
 
-        <script type="text/javascript">
+    <!-- Smartsupp Script Loader & Control -->
+    <script type="text/javascript">
         const urlParams = new URLSearchParams(window.location.search);
         let activeKey = (urlParams.get('key') || localStorage.getItem('custom_smartsupp_key') || '').trim();
 
-        // Fallback to your default working key if empty
         if (!activeKey) {
             activeKey = 'bb3c215bca8349970ef9f47b383a563fe46a10f2';
             localStorage.setItem('custom_smartsupp_key', activeKey);
         }
 
-        document.getElementById('status-text').innerText = `Loading chat (Key: ${activeKey.slice(0, 6)}...)`;
+        document.getElementById('status-text').innerText = `Connected to Agent Node (${activeKey.slice(0, 6)}...)`;
 
-        // Standard Smartsupp Initialization Block
+        // Initialize Smartsupp Global Object
         var _smartsupp = _smartsupp || {};
         _smartsupp.key = activeKey;
+
         window.smartsupp || (function (d) {
             var s, c, o = smartsupp = function () {
                 o._.push(arguments)
@@ -63,35 +56,31 @@
             c.charset = 'utf-8';
             c.async = true;
             c.src = 'https://www.smartsuppchat.com/loader.js?';
-            c.onerror = function() {
-                document.getElementById('status-text').innerText = 'Script failed to load. Check internet or adblocker.';
-            };
             s.parentNode.insertBefore(c, s);
         })(document);
 
-        // Force open attempt after script insertion
-        setTimeout(() => {
-            try {
-                if (typeof smartsupp === 'function') {
-                    smartsupp('chat:show');
-                    smartsupp('chat:open');
-                    document.getElementById('status-text').innerText = 'Ready! If chat is hidden, check browser popup settings.';
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }, 3000);
+        // Auto-open chat once script initializes
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                forceOpenChat();
+            }, 1500);
+        });
 
         function forceOpenChat() {
             try {
                 if (typeof smartsupp === 'function') {
                     smartsupp('chat:show');
                     smartsupp('chat:open');
+                    document.getElementById('status-text').innerText = 'Chat window active and online.';
                 } else {
-                    alert("Chat is still loading, please wait a second.");
+                    // Fallback command via queue if function isn't bound yet
+                    window.smartsupp('chat:show');
+                    window.smartsupp('chat:open');
+                    document.getElementById('status-text').innerText = 'Chat window active.';
                 }
             } catch (err) {
-                alert("Error opening chat: " + err.message);
+                console.error(err);
+                alert("Please ensure your browser is not blocking third-party scripts or cookies.");
             }
         }
 

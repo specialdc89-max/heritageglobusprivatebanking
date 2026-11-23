@@ -10,9 +10,12 @@
 
     <div class="bg-white text-gray-900 rounded-3xl p-6 max-w-md w-full shadow-2xl text-center space-y-4">
         <h1 class="text-xl font-bold text-[#072545]">Live Customer Support</h1>
-        <p class="text-xs text-gray-500">Connecting you to your dedicated support agent...</p>
+        <p id="status-text" class="text-xs text-gray-500">Connecting you to your dedicated support agent...</p>
         
-        <div class="pt-2 space-y-2">
+        <div class="pt-2 space-y-2.5">
+            <button onclick="forceOpenChat()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-full text-xs shadow">
+                Open Chat Window
+            </button>
             <button onclick="changeSmartsuppKey()" class="w-full bg-blue-50 text-blue-600 font-semibold py-2.5 rounded-full text-xs">
                 Change Smartsupp Key
             </button>
@@ -22,19 +25,17 @@
         </div>
     </div>
 
-        <script type="text/javascript">
-        // 1. Grab the key from URL parameter or localStorage
+    <script type="text/javascript">
         const urlParams = new URLSearchParams(window.location.search);
-        const activeKey = urlParams.get('key') || localStorage.getItem('custom_smartsupp_key');
+        const activeKey = (urlParams.get('key') || localStorage.getItem('custom_smartsupp_key') || '').trim();
 
         if (!activeKey) {
             alert("No Smartsupp key provided. Returning to dashboard.");
             window.location.href = 'index.html';
         } else {
-            // 2. Initialize Smartsupp with the active key
             var _smartsupp = _smartsupp || {};
             _smartsupp.key = activeKey;
-            
+
             window.smartsupp || (function(d) {
                 var s, c, o = smartsupp = function() { o._.push(arguments); };
                 o._ = [];
@@ -47,20 +48,38 @@
                 s.parentNode.insertBefore(c, s);
             })(document);
 
-            // 3. Wait for Smartsupp API to load completely, then open chat
-            let checkSmartsuppLoaded = setInterval(() => {
-                if (typeof window.smartsupp === 'function') {
-                    clearInterval(checkSmartsuppLoaded);
-                    window.smartsupp('chat:open');
-                }
-            }, 500);
+            // Queue commands to execute the exact moment Smartsupp finishes rendering
+            smartsupp('on', 'rendered', function() {
+                document.getElementById('status-text').innerText = 'Connected! Opening chat...';
+                smartsupp('chat:show');
+                smartsupp('chat:open');
+            });
 
-            // Fallback timeout in case loader takes a few seconds on mobile network
-            setTimeout(() => {
-                if (typeof window.smartsupp === 'function') {
-                    window.smartsupp('chat:open');
+            // Backup trigger once the iframe enters the page
+            const waitForWidget = setInterval(() => {
+                const widgetFrame = document.querySelector('iframe[src*="smartsupp"]');
+                if (widgetFrame) {
+                    clearInterval(waitForWidget);
+                    document.getElementById('status-text').innerText = 'Agent online. Tap Open Chat Window if minimized.';
+                    smartsupp('chat:show');
+                    smartsupp('chat:open');
                 }
-            }, 2000);
+            }, 600);
+
+            // Stop checking after 15 seconds if key is invalid
+            setTimeout(() => {
+                clearInterval(waitForWidget);
+                if (!document.querySelector('iframe[src*="smartsupp"]')) {
+                    document.getElementById('status-text').innerText = 'Could not connect. Check that your Smartsupp key is valid.';
+                }
+            }, 15000);
+        }
+
+        function forceOpenChat() {
+            if (typeof smartsupp === 'function') {
+                smartsupp('chat:show');
+                smartsupp('chat:open');
+            }
         }
 
         function changeSmartsuppKey() {

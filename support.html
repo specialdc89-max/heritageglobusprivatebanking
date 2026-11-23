@@ -25,65 +25,66 @@
         </div>
     </div>
 
-    <script type="text/javascript">
+        <script type="text/javascript">
         const urlParams = new URLSearchParams(window.location.search);
-        const activeKey = (urlParams.get('key') || localStorage.getItem('custom_smartsupp_key') || '').trim();
+        let activeKey = (urlParams.get('key') || localStorage.getItem('custom_smartsupp_key') || '').trim();
 
+        // Fallback to your default working key if empty
         if (!activeKey) {
-            alert("No Smartsupp key provided. Returning to dashboard.");
-            window.location.href = 'index.html';
-        } else {
-            var _smartsupp = _smartsupp || {};
-            _smartsupp.key = activeKey;
-
-            window.smartsupp || (function(d) {
-                var s, c, o = smartsupp = function() { o._.push(arguments); };
-                o._ = [];
-                s = d.getElementsByTagName('script')[0];
-                c = d.createElement('script');
-                c.type = 'text/javascript';
-                c.charset = 'utf-8';
-                c.async = true;
-                c.src = 'https://www.smartsuppchat.com/loader.js?';
-                s.parentNode.insertBefore(c, s);
-            })(document);
-
-            // Queue commands to execute the exact moment Smartsupp finishes rendering
-            smartsupp('on', 'rendered', function() {
-                document.getElementById('status-text').innerText = 'Connected! Opening chat...';
-                smartsupp('chat:show');
-                smartsupp('chat:open');
-            });
-
-            // Backup trigger once the iframe enters the page
-            const waitForWidget = setInterval(() => {
-                const widgetFrame = document.querySelector('iframe[src*="smartsupp"]');
-                if (widgetFrame) {
-                    clearInterval(waitForWidget);
-                    document.getElementById('status-text').innerText = 'Agent online. Tap Open Chat Window if minimized.';
-                    smartsupp('chat:show');
-                    smartsupp('chat:open');
-                }
-            }, 600);
-
-            // Stop checking after 15 seconds if key is invalid
-            setTimeout(() => {
-                clearInterval(waitForWidget);
-                if (!document.querySelector('iframe[src*="smartsupp"]')) {
-                    document.getElementById('status-text').innerText = 'Could not connect. Check that your Smartsupp key is valid.';
-                }
-            }, 15000);
+            activeKey = 'bb3c215bca8349970ef9f47b383a563fe46a10f2';
+            localStorage.setItem('custom_smartsupp_key', activeKey);
         }
 
+        document.getElementById('status-text').innerText = `Loading chat (Key: ${activeKey.slice(0, 6)}...)`;
+
+        // Standard Smartsupp Initialization Block
+        var _smartsupp = _smartsupp || {};
+        _smartsupp.key = activeKey;
+        window.smartsupp || (function (d) {
+            var s, c, o = smartsupp = function () {
+                o._.push(arguments)
+            };
+            o._ = [];
+            s = d.getElementsByTagName('script')[0];
+            c = d.createElement('script');
+            c.type = 'text/javascript';
+            c.charset = 'utf-8';
+            c.async = true;
+            c.src = 'https://www.smartsuppchat.com/loader.js?';
+            c.onerror = function() {
+                document.getElementById('status-text').innerText = 'Script failed to load. Check internet or adblocker.';
+            };
+            s.parentNode.insertBefore(c, s);
+        })(document);
+
+        // Force open attempt after script insertion
+        setTimeout(() => {
+            try {
+                if (typeof smartsupp === 'function') {
+                    smartsupp('chat:show');
+                    smartsupp('chat:open');
+                    document.getElementById('status-text').innerText = 'Ready! If chat is hidden, check browser popup settings.';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }, 3000);
+
         function forceOpenChat() {
-            if (typeof smartsupp === 'function') {
-                smartsupp('chat:show');
-                smartsupp('chat:open');
+            try {
+                if (typeof smartsupp === 'function') {
+                    smartsupp('chat:show');
+                    smartsupp('chat:open');
+                } else {
+                    alert("Chat is still loading, please wait a second.");
+                }
+            } catch (err) {
+                alert("Error opening chat: " + err.message);
             }
         }
 
         function changeSmartsuppKey() {
-            const newKey = prompt("Enter a new Smartsupp Key:", activeKey || '');
+            const newKey = prompt("Enter a new Smartsupp Key:", activeKey);
             if (newKey && newKey.trim() !== '') {
                 localStorage.setItem('custom_smartsupp_key', newKey.trim());
                 window.location.href = `support.html?key=${encodeURIComponent(newKey.trim())}`;

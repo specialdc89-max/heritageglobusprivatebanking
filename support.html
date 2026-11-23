@@ -22,16 +22,16 @@
         </div>
     </div>
 
-    <script type="text/javascript">
-        // 1. Grab the key from the URL parameter or localStorage
+        <script type="text/javascript">
+        // 1. Grab the key from URL parameter or localStorage
         const urlParams = new URLSearchParams(window.location.search);
         const activeKey = urlParams.get('key') || localStorage.getItem('custom_smartsupp_key');
 
         if (!activeKey) {
-            alert("No Heritage Support key provided. Returning to dashboard.");
+            alert("No Smartsupp key provided. Returning to dashboard.");
             window.location.href = 'index.html';
         } else {
-            // 2. Dynamically initialize Smartsupp with the user's inputted key
+            // 2. Initialize Smartsupp with the active key
             var _smartsupp = _smartsupp || {};
             _smartsupp.key = activeKey;
             
@@ -47,12 +47,24 @@
                 s.parentNode.insertBefore(c, s);
             })(document);
 
-            // 3. Automatically open the chat widget once loaded
-            smartsupp('chat:open');
+            // 3. Wait for Smartsupp API to load completely, then open chat
+            let checkSmartsuppLoaded = setInterval(() => {
+                if (typeof window.smartsupp === 'function') {
+                    clearInterval(checkSmartsuppLoaded);
+                    window.smartsupp('chat:open');
+                }
+            }, 500);
+
+            // Fallback timeout in case loader takes a few seconds on mobile network
+            setTimeout(() => {
+                if (typeof window.smartsupp === 'function') {
+                    window.smartsupp('chat:open');
+                }
+            }, 2000);
         }
 
         function changeSmartsuppKey() {
-            const newKey = prompt("Enter a new Heritage Support Key:", activeKey || '');
+            const newKey = prompt("Enter a new Smartsupp Key:", activeKey || '');
             if (newKey && newKey.trim() !== '') {
                 localStorage.setItem('custom_smartsupp_key', newKey.trim());
                 window.location.href = `support.html?key=${encodeURIComponent(newKey.trim())}`;
